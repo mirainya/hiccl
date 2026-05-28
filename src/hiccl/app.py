@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import time
 from collections.abc import Callable
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
+
+logger = logging.getLogger("hiccl.app")
 
 from fastapi import FastAPI, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
@@ -32,6 +35,24 @@ class CascadeStaticFiles(StaticFiles):
             raise RuntimeError(f"None of the directories exist: {directories}")
         super().__init__(directory=existing_dirs[0], **kwargs)
         self.all_directories = existing_dirs
+
+
+def _generate_font_tags(config: HicclConfig) -> str:
+    if getattr(config, "offline_mode", False):
+        return """  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+  </style>"""
+    else:
+        return """  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    }
+  </style>"""
 
 
 def hiccl_raw_layout(
@@ -82,6 +103,8 @@ def hiccl_default_layout(
     </div>
   </div>"""
 
+    fonts_html = _generate_font_tags(config)
+
     return f"""<!DOCTYPE html>
 <html lang="zh-CN" data-theme="{config.theme}">
 <head>
@@ -94,14 +117,7 @@ def hiccl_default_layout(
   <script defer src="/static/alpine.js"></script>
   <script src="/static/htmx.js"></script>
   <script src="/static/hiccl.js"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <style>
-    body {{
-      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-    }}
-  </style>
+  {fonts_html}
   {config.head_extra}
 </head>
 <body class="min-h-screen bg-base-300 flex flex-col items-center gap-6">
@@ -148,6 +164,8 @@ def hiccl_card_layout(
       {desc_html}
     </div>"""
 
+    fonts_html = _generate_font_tags(config)
+
     return f"""<!DOCTYPE html>
 <html lang="zh-CN" data-theme="{config.theme}">
 <head>
@@ -160,14 +178,7 @@ def hiccl_card_layout(
   <script defer src="/static/alpine.js"></script>
   <script src="/static/htmx.js"></script>
   <script src="/static/hiccl.js"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <style>
-    body {{
-      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-    }}
-  </style>
+  {fonts_html}
   {config.head_extra}
 </head>
 <body class="min-h-screen bg-base-300 flex flex-col items-center gap-6">
@@ -198,6 +209,7 @@ class HicclConfig:
     session_max_age: float = 1800.0  # 30 minutes
     session_cleanup_interval: float = 60.0  # 1 minute
     pages: dict[str, type[Component]] | None = None
+    offline_mode: bool = False
 
     # Layout and customization parameters
     theme: str = "dark"
@@ -228,8 +240,8 @@ async def _session_eviction_loop(interval: float, max_age: float) -> None:
                     session.dispose()
         except asyncio.CancelledError:
             break
-        except Exception:
-            pass
+        except Exception as e:
+            logger.exception("Error in session eviction loop: %s", e)
 
 
 def create_hiccl_app(config: HicclConfig) -> FastAPI:

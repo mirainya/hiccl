@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from collections.abc import Callable, Awaitable
+
+logger = logging.getLogger("hiccl.scheduler")
 
 
 class RenderScheduler:
@@ -56,8 +59,8 @@ class RenderScheduler:
                         await push_fn(patches)
                 except asyncio.CancelledError:
                     raise
-                except Exception:
-                    pass  # Log in production
+                except Exception as e:
+                    logger.exception("Error during scheduler tick: %s", e)
 
     def start(
         self,

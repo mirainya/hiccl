@@ -40,6 +40,17 @@ class TestSignal:
         s = Signal(42)
         assert repr(s) == "Signal(42)"
 
+    def test_dependents_set_type(self):
+        s = Signal(0)
+        assert isinstance(s._dependents, set)
+
+    def test_tracker_seen_deduplication(self):
+        a = Signal(10)
+        # computed signal reads `a` three times
+        c = ComputedSignal(lambda: a.get() + a.get() + a.get())
+        assert len(c._sources) == 1
+        assert c._sources[0] is a
+
 
 # ---------------------------------------------------------------------------
 # ComputedSignal

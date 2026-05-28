@@ -19,9 +19,12 @@ class _Tracker:
 
     def __init__(self) -> None:
         self.dependencies: list[Signal[Any]] = []
+        self._seen: set[int] = set()
 
     def add_dependency(self, signal: Signal[Any]) -> None:
-        if signal not in self.dependencies:
+        sig_id = id(signal)
+        if sig_id not in self._seen:
+            self._seen.add(sig_id)
             self.dependencies.append(signal)
 
 
@@ -84,7 +87,7 @@ class Signal(Generic[T]):
     def __init__(self, initial: T) -> None:
         self._value: T = initial
         self._version: int = 0
-        self._dependents: list[ComputedSignal[Any] | Effect] = []
+        self._dependents: set[ComputedSignal[Any] | Effect] = set()
 
     def get(self) -> T:
         tracker = _current_tracker.get()
@@ -131,8 +134,7 @@ class ComputedSignal(Signal[T]):
     def _recompute(self) -> None:
         # Clean up old subscriptions
         for src in self._sources:
-            if self in src._dependents:
-                src._dependents.remove(self)
+            src._dependents.discard(self)
         self._sources.clear()
 
         tracker = _Tracker()
@@ -144,8 +146,7 @@ class ComputedSignal(Signal[T]):
 
         self._sources = tracker.dependencies
         for src in self._sources:
-            if self not in src._dependents:
-                src._dependents.append(self)
+            src._dependents.add(self)
 
         old_value = self._value
         self._dirty = False
@@ -177,8 +178,7 @@ class Effect:
     def _execute(self) -> None:
         # Clean up old subscriptions
         for dep in self._deps:
-            if self in dep._dependents:
-                dep._dependents.remove(self)
+            dep._dependents.discard(self)
         self._deps.clear()
 
         tracker = _Tracker()
@@ -190,8 +190,7 @@ class Effect:
 
         self._deps = tracker.dependencies
         for dep in self._deps:
-            if self not in dep._dependents:
-                dep._dependents.append(self)
+            dep._dependents.add(self)
 
     def invalidate(self) -> None:
         if self._disposed:
@@ -204,6 +203,5 @@ class Effect:
     def dispose(self) -> None:
         self._disposed = True
         for dep in self._deps:
-            if self in dep._dependents:
-                dep._dependents.remove(self)
+            dep._dependents.discard(self)
         self._deps.clear()

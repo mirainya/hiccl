@@ -78,3 +78,26 @@ class TestRenderScheduler:
         assert scheduler._task is not None
         await scheduler.stop()
         assert scheduler._task is None
+
+    async def test_tick_handles_exception_and_logs(self, caplog):
+        import logging
+        from hiccl.scheduler import RenderScheduler
+
+        scheduler = RenderScheduler()
+
+        async def render_fn(dirty_ids):
+            raise ValueError("Simulated render crash")
+
+        async def push_fn(patches):
+            pass
+
+        loop = asyncio.get_event_loop()
+        with caplog.at_level(logging.ERROR, logger="hiccl.scheduler"):
+            scheduler.start(loop, render_fn, push_fn)
+            scheduler.mark_dirty("comp-1")
+            await asyncio.sleep(0.05)
+            await scheduler.stop()
+
+        # Check that the exception was caught and logged
+        assert any("Error during scheduler tick" in record.message for record in caplog.records)
+        assert any(record.levelname == "ERROR" for record in caplog.records)
