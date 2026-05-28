@@ -25,6 +25,7 @@ dev = [
   "pytest-timeout>=2.2.0",
   "uvicorn[standard]>=0.29",
   "twine>=6.2.0",
+  "build>=1.5.0",
 ]
 
 [build-system]
@@ -56,6 +57,9 @@ known-first-party = ["hiccl"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+hiccl = ["static/*"]
 
 [[tool.uv.index]]
 url = "https://mirrors.aliyun.com/pypi/simple"

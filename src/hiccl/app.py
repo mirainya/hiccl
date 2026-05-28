@@ -271,9 +271,7 @@ def create_hiccl_app(config: HicclConfig) -> FastAPI:
 
         static_path = config.static_dir
         if not os.path.isabs(static_path) and not os.path.isdir(static_path):
-            package_root = os.path.abspath(
-                os.path.join(os.path.dirname(__file__), "..", "..")
-            )
+            package_root = os.path.abspath(os.path.dirname(__file__))
             pkg_static = os.path.join(package_root, "static")
             if os.path.isdir(pkg_static):
                 static_path = pkg_static

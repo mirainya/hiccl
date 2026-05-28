@@ -16,11 +16,17 @@ src/hiccl.egg-info/SOURCES.txt
 src/hiccl.egg-info/dependency_links.txt
 src/hiccl.egg-info/requires.txt
 src/hiccl.egg-info/top_level.txt
+src/hiccl/static/alpine.js
+src/hiccl/static/daisyui.css
+src/hiccl/static/hiccl.js
+src/hiccl/static/htmx.js
+src/hiccl/static/tailwind.js
 src/hiccl/transport/__init__.py
 src/hiccl/transport/http.py
 src/hiccl/transport/protocol.py
 src/hiccl/transport/sse.py
 src/hiccl/transport/websocket.py
+tests/test_babashka.py
 tests/test_component.py
 tests/test_diff.py
 tests/test_hiccup.py
