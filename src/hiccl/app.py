@@ -7,14 +7,18 @@ import time
 from collections.abc import Callable
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
 
-from fastapi import FastAPI, Request, Response, Depends
+from fastapi import FastAPI, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from hiccl.session import _sessions
 
 from hiccl.registry import ComponentRegistry
 from hiccl.renderer import HiccupRenderer
+
+if TYPE_CHECKING:
+    from hiccl.component import Component
 
 
 def hiccl_raw_layout(
@@ -293,7 +297,6 @@ def create_hiccl_app(config: HicclConfig) -> FastAPI:
 def _register_page_routes(app: FastAPI, config: HicclConfig) -> None:
     from fastapi.responses import HTMLResponse
     from hiccl.transport.http import get_session
-    from hiccl.component import Component
     import re
 
     if not config.pages:

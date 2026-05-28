@@ -1,6 +1,10 @@
 # Hiccl — Full-Stack Reactive Web Framework for Python 🧪🥒
 
 <p align="center">
+  <a href="README.md">简体中文</a> • <strong>English</strong>
+</p>
+
+<p align="center">
   <strong>Modern Web Framework Combining Clojure's Hiccup DSL with Pythonic Reactive State Serialization</strong>
 </p>
 
@@ -9,7 +13,8 @@
   <a href="#-key-features">Key Features</a> •
   <a href="#-quick-start">Quick Start</a> •
   <a href="#-architecture">Architecture</a> •
-  <a href="#-offline-readiness">Offline Readiness</a>
+  <a href="#-offline-readiness">Offline Readiness</a> •
+  <a href="#-development--contribution-guide">Development & Contribution</a>
 </p>
 
 ---
@@ -190,6 +195,65 @@ python3 examples/combined_app.py
 
 ---
 
+## 🛠️ Development & Contribution Guide
+
+We warmly welcome and appreciate contributions from the community! To maintain pristine code quality, consistency, and velocity, please install our modern toolchain and adhere to the guidelines below before creating a Pull Request.
+
+### 📦 1. Toolchain Management with `mise`
+
+This project leverages [**mise**](https://mise.jdx.dev/) for polyglot environment management and tasks automation. It is a modern, faster, and more robust alternative to traditional environment and script tools.
+
+#### **Why mise?**
+*   **Unified Environments**: It automatically pins and installs the precise versions of Python, Ruff, and uv configured in `mise.toml` and `pyproject.toml` when you enter the project directory.
+*   **Declarative Task Runner**: Bypasses typing out lengthy terminal scripts by providing simple alias commands under `mise run <task>`.
+
+#### **Quick Installation & Setup**
+1.  **Install mise**:
+    *   **macOS** (Homebrew): `brew install mise`
+    *   **Universal Script**: `curl https://mise.jdx.dev/install.sh | sh`
+2.  **Trust & Activate the Project**:
+    In the root directory of the project, run:
+    ```bash
+    mise trust
+    ```
+    *(Alternatively, you can activate mise in your terminal shell with `eval "$(mise activate bash)"` or your respective shell configuration for automatic activation.)*
+
+---
+
+### 🚀 2. Everyday Development Tasks
+
+Once `mise` is activated, you can execute these highly optimized tasks from your terminal:
+
+| Command | Task Description | Underlying Process |
+| :--- | :--- | :--- |
+| **`mise run lint`** | **Run Static Linter**. Inspects the codebase using Ruff check for potential errors. | `ruff check` |
+| **`mise run format`** | **Code Formatter**. Automatically formats code style, indentation, and structure. | `ruff format` |
+| **`mise run test`** | **Run Unit Tests**. Runs 140+ highly optimized unit tests in milliseconds using Pytest. | `uv run -m pytest` |
+| **`mise run build`** | **Build Packages**. Builds the source and wheel distribution artifacts. | `uv run -m build` |
+| **`mise run check`** | **Pre-publish Validation**. Validates distribution metadata for PyPI using Twine. | `uv run -m twine check dist/*` |
+
+> [!TIP]
+> You can run `mise tasks` to list all available tasks and their descriptions at any time.
+
+---
+
+### 🤝 3. Contribution Rules (Golden Rules)
+
+Before submitting any Pull Request (PR), please verify that your changes adhere to these strict quality standards:
+
+1.  **Linter Passes Cleanly**:
+    Run `mise run lint`. There must be zero linting violations or warnings.
+2.  **Formatter Adheres Completely**:
+    Run `mise run format` to automatically format all files. No code modifications should deviate from the configured Ruff format settings.
+3.  **100% Unit Test Pass Rate**:
+    Run `mise run test`. **Every single test case must pass without exceptions or failures.** Thanks to the high-efficiency architecture, all 140+ tests execute in less than 0.5s!
+
+> [!IMPORTANT]
+> The project CI executes strict formatting, linting, and pytest suites on every PR. Any failure in these stages will block merging. Please run these check tasks locally before committing and pushing.
+
+---
+
 ## 📝 License
 
 This project is licensed under the [MIT License](LICENSE).
+

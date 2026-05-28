@@ -17,7 +17,7 @@ from hiccl import (
     server,
     signal,
 )
-from hiccl.hiccup import button, div, form, h2, input_, li, span, ul
+from hiccl.hiccup import button, div, form, h2, input_
 
 # ---------------------------------------------------------------------------
 # Shared message store (all sessions see the same messages)

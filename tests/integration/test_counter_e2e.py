@@ -66,7 +66,7 @@ def counter_app():
 class TestCounterHTTPCycle:
     def test_initial_render(self, counter_app):
         app, comp = counter_app
-        with TestClient(app) as client:
+        with TestClient(app):
             html = HiccupRenderer().render_component(comp)
             assert "Count: 0" in html
 

@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from typing import TypeAlias
 
 # Type alias: a Hiccup node is either a string leaf or a list
 # [tag, attrs_dict_or_None, *children]
-type HiccupNode = str | list  # type: ignore[valid-type]
+HiccupNode: TypeAlias = str | list
 
 
 def normalize_child(child: object) -> str | list:

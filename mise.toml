@@ -2,3 +2,27 @@
 python = "3.14"
 ruff = "0.15.12"
 uv = "0.11.16"
+
+[tasks.check]
+description = "Verify built distribution packages using twine check"
+run = "uv run -m twine check dist/*"
+
+[tasks.publish]
+description = "Publish the built distribution packages to PyPI"
+run = "uv run -m twine upload dist/*"
+
+[tasks.build]
+description = "Build source and wheel distributions using standard build module"
+run = "uv run -m build"
+
+[tasks.format]
+description = "Format the codebase using Ruff formatter"
+run = "ruff format"
+
+[tasks.lint]
+description = "Lint the codebase using Ruff linter"
+run = "ruff check"
+
+[tasks.test]
+description = "Run all unit tests using Pytest (100% pass required)"
+run = "uv run -m pytest"

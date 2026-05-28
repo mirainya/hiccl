@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-import json
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
@@ -53,7 +52,7 @@ async def hiccl_websocket(websocket: WebSocket, session_id: str):
         5. On disconnect: session is NOT immediately disposed (supports reconnect).
     """
     from hiccl.scheduler import RenderScheduler
-    from hiccl.session import Session, _sessions
+    from hiccl.session import _sessions
     from hiccl.transport.protocol import NullTransport
 
     await websocket.accept()

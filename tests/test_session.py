@@ -3,7 +3,7 @@
 from hiccl.component import Component, server
 from hiccl.registry import ComponentRegistry
 from hiccl.renderer import HiccupRenderer
-from hiccl.session import Session, _sessions
+from hiccl.session import Session
 from hiccl.signal import Signal
 
 

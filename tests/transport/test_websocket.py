@@ -65,7 +65,7 @@ class TestWebSocketTransport:
         app = setup_ws_app
         with TestClient(app) as client:
             # WebSocket connects but server should close it
-            with client.websocket_connect("/hiccl/ws/invalid-session") as ws:
+            with client.websocket_connect("/hiccl/ws/invalid-session"):
                 # Server will close the connection; reading should fail
                 pass
 
@@ -73,5 +73,5 @@ class TestWebSocketTransport:
         """Test that WebSocket can connect and disconnect cleanly."""
         app = setup_ws_app
         with TestClient(app) as client:
-            with client.websocket_connect("/hiccl/ws/ws-session-1") as ws:
+            with client.websocket_connect("/hiccl/ws/ws-session-1"):
                 pass  # Clean disconnect

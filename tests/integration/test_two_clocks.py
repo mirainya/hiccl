@@ -1,6 +1,5 @@
 """Integration tests for the Two Clocks example."""
 
-import re
 import time
 
 # ---- Re-create the TwoClocks component here for isolated tests ----
@@ -178,7 +177,7 @@ class TestTwoClocksUnit:
 class TestTwoClocksHTTP:
     def test_initial_render(self, clocks_app):
         app, comp = clocks_app
-        with TestClient(app) as client:
+        with TestClient(app):
             r = HiccupRenderer()
             html = r.render_component(comp)
             assert "Server time:" in html

@@ -1,6 +1,10 @@
 # Hiccl — 全栈反应式 Python Web 框架 🧪🥒
 
 <p align="center">
+  <strong>简体中文</strong> • <a href="README.en.md">English</a>
+</p>
+
+<p align="center">
   <strong>基于 Hiccup 声明式 DSL 表达与 Pythonic 状态序列化流动的现代化 Web 框架</strong>
 </p>
 
@@ -9,7 +13,8 @@
   <a href="#-核心特性">核心特性</a> •
   <a href="#-快速上手">快速上手</a> •
   <a href="#-架构设计">架构设计</a> •
-  <a href="#-极速离线体验">极速离线体验</a>
+  <a href="#-极速离线体验">极速离线体验</a> •
+  <a href="#-开发与贡献指南">开发与贡献指南</a>
 </p>
 
 ---
@@ -190,6 +195,65 @@ python3 examples/combined_app.py
 
 ---
 
+## 🛠️ 开发与贡献指南
+
+我们非常欢迎社区贡献！为了确保代码质量与一致性，请在开发前安装好我们的现代化开发工具链，并遵循以下指南。
+
+### 📦 1. 开发工具链管理 (`mise`)
+
+本项目推荐并支持使用 [**mise**](https://mise.jdx.dev/) 这一多语言项目管理利器。它比传统工具更快、更轻量，且能自动配置项目所需的特定版本环境与执行便捷的任务命令（Tasks）。
+
+#### **为什么使用 mise？**
+*   **统一的工具版本**：自动为您拉取并安装 `pyproject.toml` 和 `mise.toml` 中指定的 Python、Ruff、uv 等环境，无需手动切换或配置虚拟环境。
+*   **强悍的任务执行**：直接通过 `mise run <task>` 执行各种日常脚本，告别冗长难记的命令行。
+
+#### **快速安装与开启**
+1.  **安装 mise**：
+    *   **macOS** (Homebrew): `brew install mise`
+    *   **通用安装脚本**: `curl https://mise.jdx.dev/install.sh | sh`
+2.  **受信任与激活项目**：
+    在项目根目录运行以下命令以加载工具：
+    ```bash
+    mise trust
+    ```
+    *(或者您也可以运行 `eval "$(mise activate bash)"` 或对应的 shell 激活命令来自动激活 `mise` 环境变量。)*
+
+---
+
+### 🚀 2. 本地任务与开发流程
+
+在 `mise` 激活后，你可以使用以下预定义的高效开发任务：
+
+| 任务命令 | 任务描述 | 对应底层指令 |
+| :--- | :--- | :--- |
+| **`mise run lint`** | **代码静态检查**。使用 Ruff 对代码进行规范与潜在 Bugs 检查。 | `ruff check` |
+| **`mise run format`** | **代码自动格式化**。使用 Ruff 格式化代码，确保缩进、引号等完全一致。 | `ruff format` |
+| **`mise run test`** | **运行单元测试**。使用 Pytest 极速执行 140+ 完备单元测试。 | `uv run -m pytest` |
+| **`mise run build`** | **项目打包构建**。将项目编译为源码发布包与二进制 Wheel。 | `uv run -m build` |
+| **`mise run check`** | **PyPI 发布前合规检查**。检查构建结果元数据是否符合标准。 | `uv run -m twine check dist/*` |
+
+> [!TIP]
+> 你可以使用 `mise tasks` 随时查看项目支持的所有开发任务与说明。
+
+---
+
+### 🤝 3. 贡献准则（重要规范）
+
+提交代码 Pull Request (PR) 前，请确保完成以下三项黄金法则：
+
+1.  **代码静态检查（Lint）合格**：
+    运行 `mise run lint`，不得有任何 Lint 报错或未解决的规范警告。
+2.  **代码格式化（Format）合格**：
+    运行 `mise run format` 将代码进行统一格式化。所有的代码修改必须符合 Ruff 配置的格式规范（不产生任何格式差异）。
+3.  **单元测试 100% 通过（Pytest）**：
+    运行 `mise run test`。**所有的单元测试用例必须 100% 成功通过（无任何失败或错误）**。由于我们使用了极速的反应式架构，140+ 测试在半秒内即可全部跑完！
+
+> [!IMPORTANT]
+> 持续集成 (CI) 会对每次 PR 进行严格的 Lint、Format 与 Pytest 校验。上述三项中有任何一项未通过，PR 将无法被合并。请在本地提交前，务必运行一遍所有的验证任务。
+
+---
+
 ## 📝 授权许可
 
 本项目采用 [MIT 许可证](LICENSE) 授权。
+

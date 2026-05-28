@@ -1,9 +1,6 @@
 """Tests for hiccl.transport.sse — SSE handler."""
 
-from hiccl.component import Component
 from hiccl.registry import ComponentRegistry
-from hiccl.renderer import HiccupRenderer
-from hiccl.session import Session, _sessions
 
 
 class TestSSETransport:

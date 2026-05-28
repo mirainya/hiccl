@@ -3,7 +3,7 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from hiccl.component import Component, get_server_methods, server
+from hiccl.component import Component, server
 from hiccl.registry import ComponentRegistry
 from hiccl.renderer import HiccupRenderer
 from hiccl.session import Session, _sessions
@@ -53,7 +53,7 @@ class TestHTTPTransport:
             assert comp.count.get() == 0
 
             # Trigger increment action
-            resp = client.post(f"/hiccl/action/counter-1/increment")
+            resp = client.post("/hiccl/action/counter-1/increment")
             assert resp.status_code == 200
             assert comp.count.get() == 1
             assert "Count: 1" in resp.text
