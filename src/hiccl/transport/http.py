@@ -33,6 +33,9 @@ async def get_session(request: Request, response: Response):
 
     session.touch()
 
+    # Store the session_id in request.state so that layout builders can extract it on first page load
+    request.state.hiccl_session_id = session_id
+
     if is_new:
         response.set_cookie(
             "hiccl_sid", session_id, httponly=True, samesite="lax", path="/"

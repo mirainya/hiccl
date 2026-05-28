@@ -24,7 +24,9 @@ if TYPE_CHECKING:
 def hiccl_raw_layout(
     request: Request, comp_html: str, menu_html: str, config: HicclConfig
 ) -> str:
-    session_id = request.cookies.get(config.session_cookie_name, "")
+    session_id = getattr(
+        request.state, "hiccl_session_id", None
+    ) or request.cookies.get(config.session_cookie_name, "")
     return f"""<!DOCTYPE html>
 <html lang="zh-CN" data-theme="{config.theme}">
 <head>
@@ -48,7 +50,9 @@ def hiccl_raw_layout(
 def hiccl_default_layout(
     request: Request, comp_html: str, menu_html: str, config: HicclConfig
 ) -> str:
-    session_id = request.cookies.get(config.session_cookie_name, "")
+    session_id = getattr(
+        request.state, "hiccl_session_id", None
+    ) or request.cookies.get(config.session_cookie_name, "")
 
     navbar_html = ""
     if config.show_navbar and menu_html:
@@ -99,7 +103,9 @@ def hiccl_default_layout(
 def hiccl_card_layout(
     request: Request, comp_html: str, menu_html: str, config: HicclConfig
 ) -> str:
-    session_id = request.cookies.get(config.session_cookie_name, "")
+    session_id = getattr(
+        request.state, "hiccl_session_id", None
+    ) or request.cookies.get(config.session_cookie_name, "")
 
     navbar_html = ""
     if config.show_navbar and menu_html:

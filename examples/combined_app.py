@@ -16,6 +16,7 @@ from hiccl import (
     signal,
 )
 from hiccl.hiccup import button, div, form, h2, input_, span, raw
+from examples.babashka.app import BabashkaTerminal
 
 
 # 1. Counter Component
@@ -315,7 +316,7 @@ app = create_hiccl_app(
     HicclConfig(
         component_registry=registry,
         transport_modes={"http", "ws", "sse"},
-        pages=menu(Counter, TwoClocks, ChatRoom),
+        pages=menu(Counter, TwoClocks, ChatRoom, BabashkaTerminal),
         brand_name="Hiccl Combined Demo",
         theme="night",
     )

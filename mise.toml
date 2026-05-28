@@ -1,4 +1,5 @@
 [tools]
+babashka = "latest"
 python = "3.14"
 ruff = "0.15.12"
 uv = "0.11.16"
