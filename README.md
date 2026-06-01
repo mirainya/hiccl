@@ -45,6 +45,9 @@
 *   **🛡️ 运行时 `hiccl.spec` 契约保障**：支持 Clojure-like 声明式数据契约，无缝守卫 `@server` 方法边界；提供结构化 `explain_data` 报错，赋予 AI Agent 极佳的错误内省与报错自愈闭环能力。
 *   **🔐 生产级 Redis 存储与分布式锁**：`RedisSessionStore` 支持 ConnectionPool 和指数退避重连；采用 Base64+Msgpack 高压缩率序列化并支持优雅降级；内置分布式锁悲观机制，规避高频并发状态覆写。
 *   **🔀 MQTT 层级通配符总线**：`EventBus` 原生支持层级通配符订阅（`*` 匹配单层，`#` 匹配多层），在发布时自动通过高速正则缓存路由精准分发。
+*   **🧩 Reagent 风格纯函数组件与单向数据流**：引入以 `@component` 装饰的纯展示层组件，支持使用 `use_signal()`、`subscribe()` 派生订阅及 `dispatch()` 进行单向数据流事件派发，实现 UI 与副作用的深度解耦。
+*   **📡 Clojure-like CSP 并发管道编排**：全面支持 Pythonic `Channel`（具备背压、同步/缓冲通道及安全 close 状态）、`alts_` 公平多路多信道选择原语、`timeout` 毫秒级高精度超时通道，以及配合 EventBus 异常广播的 `@go` 后台任务调度器。
+*   **🔀 Transducers 渲染管线切面中间件**：提供对 Hiccup 虚拟 DOM 树的自底向上 DFS 不可变变换器（`Transducer` 树遍历基类），内置 `LoadingTransducer`（自动按键 Loading 菊花态置换）与 `SanitizingTransducer`（日志敏感数据安全脱敏拦截器）。
 *   **🎨 内置 DaisyUI & TailwindCSS**：默认集成顶级暗色调毛玻璃组件库（DaisyUI）和原子化样式（TailwindCSS），开箱即用构建极其现代、高级的用户界面。
 *   **🌿 Alpine.js 客户端加速**：完全移除传统的 Hyperscript，深度整合 Alpine.js，支持以标准的 HTML 属性在浏览器端运行极速的交互渲染（如每秒 60 帧的高频计时器与毫秒级时差偏差计算）。
 *   **📦 100% 离线与内网就绪（Air-gapped Ready）**：所有静态依赖（`tailwind.js`、`daisyui.css`、`alpine.js`、`htmx.js`）完全本地托管于 `static/` 目录下。无需任何互联网连接即可在隔离的物理内网高速运行。

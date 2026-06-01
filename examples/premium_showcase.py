@@ -15,9 +15,15 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import datetime
 
 from hiccl import (
+    Channel,
+    alts_,
+    go,
+    timeout,
+    LoadingTransducer,
     Component,
     ComponentRegistry,
     HicclConfig,
@@ -801,7 +807,160 @@ def ReframeTodoDemo():
 
 
 # ---------------------------------------------------------------------------
-# 6. 联合大秀主面板 (Main Showcase Frame)
+# 6. CSP 并发管道大秀 (CSP Concurrency Showcase - Phase 4 Showcase)
+# ---------------------------------------------------------------------------
+
+
+class CspShowcase(Component):
+    """CSP 并发管道大秀：展示非阻塞异步 CSP Channel 消息交换，以及 go 协程与 timeout 多路复用。"""
+
+    def __init__(self, **kwargs) -> None:
+        super().__init__(**kwargs)
+        self.log_messages = signal([])
+        self.chan = Channel(maxsize=3)
+        self.buffer_count = signal(0)
+        self.status = signal("就绪")
+        self.consumer_task = None
+
+    def mount(self) -> None:
+        # 启动一个异步的 go 协程作为后台消费者，不断 get 数据
+        @go
+        async def background_consumer():
+            while not self.chan.closed:
+                # 使用 alts_ 在数据通道和超时通道之间多路复用
+                # 这展示了 Clojure 的 alts! 超时多路复用模式
+                selected, val = await alts_([self.chan, timeout(2000)])
+                if selected is self.chan:
+                    if val is None:
+                        break  # 通道关闭
+                    t_str = datetime.now().strftime("%H:%M:%S.%f")[:-3]
+                    self.log_messages.set(
+                        [f"[{t_str}] 📥 消费消息: {val}"] + self.log_messages.get()[:4]
+                    )
+                    self.buffer_count.set(len(self.chan._buf))
+                    self.status.set("已消费数据")
+                    # 模拟消费延迟
+                    await asyncio.sleep(0.5)
+                else:
+                    # 超时触发
+                    self.status.set("😴 空闲超时挂起中...")
+
+        self.consumer_task = background_consumer()
+
+    def unmount(self) -> None:
+        self.chan.close()
+        if self.consumer_task:
+            self.consumer_task.cancel()
+
+    @server
+    def send_item(self, text: str) -> None:
+        """从客户端手动向 CSP Channel 发送一条消息，触发生产者端背压。"""
+        if not text.strip():
+            return
+
+        @go
+        async def putter():
+            t_str = datetime.now().strftime("%H:%M:%S.%f")[:-3]
+            try:
+                # 尝试非阻塞写入
+                self.log_messages.set(
+                    [f"[{t_str}] 📤 发送中: {text}"] + self.log_messages.get()[:4]
+                )
+                self.buffer_count.set(len(self.chan._buf))
+                await self.chan.put(text)
+                self.buffer_count.set(len(self.chan._buf))
+            except Exception as e:
+                self.log_messages.set(
+                    [f"[{t_str}] ❌ 写入失败: {e}"] + self.log_messages.get()[:4]
+                )
+
+        putter()
+
+    def render(self) -> list:
+        logs = self.log_messages.get()
+        buf_size = self.buffer_count.get()
+        state = self.status.get()
+
+        return div(
+            {
+                "class": "card bg-base-200 border border-base-300 shadow-2xl p-6 flex flex-col gap-4 col-span-1 md:col-span-2"
+            },
+            div(
+                {
+                    "class": "flex justify-between items-center border-b border-base-300 pb-3"
+                },
+                h3(
+                    {"class": "text-xl font-bold text-info flex items-center gap-2"},
+                    "📡 CSP 管道并发控制 (Communicating Sequential Processes)",
+                ),
+                span({"class": "badge badge-info"}, "Phase 4 并发"),
+            ),
+            p(
+                {"class": "text-sm text-base-content/70"},
+                "此组件展示高并发 CSP 通道（Channel，容量为 3）。点击发送可往通道写入数据，消费端采用 `@go` 协程后台轮询并使用 `alts_` 配合 `timeout` 多路复用监控数据接收：",
+            ),
+            # 通道状态指示器
+            div(
+                {
+                    "class": "grid grid-cols-2 gap-4 bg-base-300 p-4 rounded-xl border border-base-200 text-xs font-mono font-semibold"
+                },
+                div(
+                    None,
+                    span({"class": "opacity-50"}, "📦 缓冲区暂存: "),
+                    span({"class": "text-info"}, f"{buf_size} / 3 个消息"),
+                ),
+                div(
+                    None,
+                    span({"class": "opacity-50"}, "🤖 消费者状态: "),
+                    span({"class": "text-success"}, state),
+                ),
+            ),
+            # 输入控制台
+            form(
+                {
+                    "class": "join w-full",
+                    "on_submit": self.send_item,
+                },
+                input_(
+                    {
+                        "type": "text",
+                        "name": "text",
+                        "class": "input input-bordered input-sm join-item flex-1",
+                        "placeholder": "输入消息发送到 CSP 通道...",
+                    }
+                ),
+                button(
+                    {
+                        "type": "submit",
+                        "class": "btn btn-info btn-sm join-item",
+                    },
+                    "⚡ 写入 Channel",
+                ),
+            ),
+            # 消息输出日志
+            div(
+                {
+                    "class": "bg-base-300 p-3 rounded-lg border border-base-200 flex flex-col gap-1 min-h-28"
+                },
+                span(
+                    {"class": "text-[10px] font-bold opacity-60"},
+                    "📋 CSP 通道动态交互日志:",
+                ),
+                ul(
+                    {"class": "text-[10px] font-mono opacity-80 flex flex-col gap-1"},
+                    *[li(None, log) for log in logs],
+                )
+                if logs
+                else p(
+                    {"class": "text-[10px] opacity-40 italic mt-6 text-center"},
+                    "暂无消息流转",
+                ),
+            ),
+        )
+
+
+# ---------------------------------------------------------------------------
+# 7. 联合大秀主面板 (Main Showcase Frame)
 # ---------------------------------------------------------------------------
 
 
@@ -816,6 +975,7 @@ class PremiumShowcaseFrame(Component):
         self.profile_comp = None
         self.event_comp = None
         self.reframe_comp = None
+        self.csp_comp = None
 
     def mount(self) -> None:
         # 在活动 Session 中挂载并装配子组件
@@ -831,6 +991,7 @@ class PremiumShowcaseFrame(Component):
         self.reframe_comp = self._session.mount_component(
             "reframe-todo-demo", cid="reframe-main"
         )
+        self.csp_comp = self._session.mount_component("csp-showcase", cid="csp-main")
 
         # 检测存储引擎状态
         store = self._session._store
@@ -847,6 +1008,7 @@ class PremiumShowcaseFrame(Component):
         pf_html = self._session.renderer.render_component(self.profile_comp)
         ev_html = self._session.renderer.render_component(self.event_comp)
         rf_html = self._session.renderer.render_component(self.reframe_comp)
+        csp_html = self._session.renderer.render_component(self.csp_comp)
 
         return div(
             {"class": "flex flex-col gap-6 w-full max-w-6xl mx-auto px-4"},
@@ -865,7 +1027,7 @@ class PremiumShowcaseFrame(Component):
                     ),
                     p(
                         {"class": "text-sm text-base-content/60 mt-1 max-w-xl"},
-                        "Python 中的 Clojure 哲学全栈全自愈反应式框架。本示例已深度打通并高亮展现了 Phase 0、1、2、3 所有革命性特性！",
+                        "Python 中的 Clojure 哲学全栈全自愈反应式框架。本示例已深度打通并高亮展现了 Phase 0、1、2、3、4 所有革命性特性！",
                     ),
                 ),
                 div(
@@ -895,6 +1057,11 @@ class PremiumShowcaseFrame(Component):
                 raw(sb_html),
                 raw(pf_html),
             ),
+            # Phase 4 CSP 并发管道大秀
+            div(
+                {"class": "grid grid-cols-1 md:grid-cols-2 gap-6"},
+                raw(csp_html),
+            ),
             # 底部 re-frame 大秀与事件总线大秀 (双列宽)
             div(
                 {"class": "grid grid-cols-1 md:grid-cols-2 gap-6"},
@@ -915,6 +1082,7 @@ registry.register("reactive-sandbox", ReactiveSandbox)
 registry.register("spec-profile-card", SpecProfileCard)
 registry.register("wildcard-event-hub", WildcardEventHub)
 registry.register("reframe-todo-demo", ReframeTodoDemo)
+registry.register("csp-showcase", CspShowcase)
 registry.register("premium-showcase-frame", PremiumShowcaseFrame)
 
 # 配置 RedisSessionStore (含 Msgpack & 连接池加固)
@@ -928,12 +1096,16 @@ config = HicclConfig(
     transport_modes={"http", "ws", "sse"},
     pages={"/": PremiumShowcaseFrame},
     brand_name="Hiccl Premium Showcase",
-    title="Hiccl Premium Showcase — Phase 0-3 联合大秀",
+    title="Hiccl Premium Showcase — Phase 0-4 联合大秀",
     theme="night",
     show_navbar=False,  # 隐藏默认导航，使用我们定制的豪华大横幅
 )
 
 app = create_hiccl_app(config)
+
+# 注册 Phase 4 LoadingTransducer 渲染中间件进行 HTML 过滤大秀
+renderer = app.state.hiccl["renderer"]
+renderer.transducers.append(LoadingTransducer(loading_class="btn-loading"))
 
 if __name__ == "__main__":
     import uvicorn

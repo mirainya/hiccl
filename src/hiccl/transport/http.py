@@ -79,7 +79,11 @@ async def handle_action(
             body.update({k: v for k, v in form_data.items()})
 
         # Execute via session (handles EventBus auto-publish)
-        await session.execute_action(component_id, method_name, body)
+        action_res = await session.execute_action(component_id, method_name, body)
+        from starlette.responses import Response as StarletteResponse
+
+        if isinstance(action_res, StarletteResponse):
+            return action_res
     except Exception as e:
         return HTMLResponse(str(e), status_code=500)
 

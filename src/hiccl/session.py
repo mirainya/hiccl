@@ -135,7 +135,7 @@ class Session:
 
             result = methods[method_name](**args)
             if asyncio.iscoroutine(result):
-                await result
+                result = await result
 
             # Auto-publish to EventBus for the component's non-wildcard topics
             topics = getattr(component, "topics", [])

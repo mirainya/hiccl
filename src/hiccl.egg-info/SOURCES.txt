@@ -5,6 +5,7 @@ src/hiccl/__init__.py
 src/hiccl/app.py
 src/hiccl/cli.py
 src/hiccl/component.py
+src/hiccl/csp.py
 src/hiccl/diff.py
 src/hiccl/eventbus.py
 src/hiccl/hiccup.py
@@ -19,6 +20,7 @@ src/hiccl/session_store.py
 src/hiccl/signal.py
 src/hiccl/spec.py
 src/hiccl/testing.py
+src/hiccl/transducers.py
 src/hiccl/validator.py
 src/hiccl.egg-info/PKG-INFO
 src/hiccl.egg-info/SOURCES.txt
@@ -52,6 +54,7 @@ tests/test_offline_mode.py
 tests/test_phase1.py
 tests/test_phase2.py
 tests/test_phase3.py
+tests/test_phase4.py
 tests/test_redis_store.py
 tests/test_registry.py
 tests/test_renderer.py

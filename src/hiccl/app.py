@@ -410,6 +410,11 @@ def _register_page_routes(app: FastAPI, config: HicclConfig) -> None:
                 if comp is None:
                     comp = session.mount_component(p_name, cid=cid)
 
+                if hasattr(comp, "mount_async") and asyncio.iscoroutinefunction(
+                    comp.mount_async
+                ):
+                    await comp.mount_async()
+
                 comp_html = session.renderer.render_component(comp)
 
                 # Generate the navigation menu using DaisyUI navbar

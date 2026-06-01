@@ -55,6 +55,13 @@ from hiccl.transport.protocol import NullTransport, Transport
 from hiccl.diff import Diff, DiffEngine
 from hiccl.component import use_signal
 from hiccl.re_frame import reg_state, reg_sub, reg_event, subscribe, dispatch
+from hiccl.csp import Channel, alts_, go, timeout
+from hiccl.transducers import (
+    Transducer,
+    LoadingTransducer,
+    SanitizingTransducer,
+    walk_tree,
+)
 
 
 def signal(initial):
@@ -161,4 +168,13 @@ __all__ = [
     "reg_event",
     "subscribe",
     "dispatch",
+    # CSP & Transducers
+    "Channel",
+    "alts_",
+    "go",
+    "timeout",
+    "Transducer",
+    "LoadingTransducer",
+    "SanitizingTransducer",
+    "walk_tree",
 ]

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from typing import Any
 import html as html_module
 import json
 
@@ -161,6 +162,7 @@ class HiccupRenderer:
     def __init__(self) -> None:
         self._cache: dict[str, tuple[int, str]] = {}
         self._static_cache: dict[int, tuple[str | list, str]] = {}
+        self.transducers: list[Any] = []
 
     def _is_static_and_cache(self, node: str | list) -> tuple[bool, str]:
         """Check if a node is fully static (no ActionRefs). If so, cache and return HTML."""
@@ -290,6 +292,13 @@ class HiccupRenderer:
                 from hiccl.re_frame import _current_session
 
                 _current_session.reset(token_session)
+
+        # Apply registered transducers recursively
+        if self.transducers:
+            from hiccl.transducers import walk_tree
+
+            for t in self.transducers:
+                hiccup = walk_tree(hiccup, t)
 
         # Convert on_* ActionRefs to htmx attributes
         hiccup = autobind(hiccup, component)
