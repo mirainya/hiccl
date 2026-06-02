@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import pytest
-import copy
 from hiccl.signal import HistorySignal, signal_with_history, Signal
 from hiccl.session import Session
 from hiccl.registry import ComponentRegistry
@@ -151,7 +150,7 @@ def test_session_history_signal_collection():
     renderer = HiccupRenderer()
     session = Session("sess-abc", registry, renderer)
 
-    comp = session.mount_component("test-comp", cid="test-comp-1")
+    session.mount_component("test-comp", cid="test-comp-1")
 
     # Verify that hist_sig is discovered but normal_sig is NOT
     assert "test-comp-1.hist_sig" in session._history_signals

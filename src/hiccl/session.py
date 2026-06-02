@@ -48,7 +48,9 @@ class Session:
         from hiccl.signal import HistorySignal
         from hiccl.re_frame import _re_frame_initial_state
 
-        self._re_frame_db = HistorySignal(copy.deepcopy(_re_frame_initial_state), max_snapshots=50)
+        self._re_frame_db = HistorySignal(
+            copy.deepcopy(_re_frame_initial_state), max_snapshots=50
+        )
         self._history_signals: dict[str, HistorySignal] = {
             "@re-frame-db": self._re_frame_db
         }

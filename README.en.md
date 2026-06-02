@@ -48,6 +48,8 @@
 *   **🧩 Reagent-Style Functional Components & Uni-Directional Data Flow**: Introduces `@component` pure function components. Build declarative presentation layers using `use_signal()`, `subscribe()`, and `dispatch()`, decoupling UI state from backend side-effects under a strict unidirectional flow.
 *   **📡 Clojure-like CSP Concurrency & Orchestration**: Comprehensive support for Pythonic `Channel` (with synchronous/buffered capacity, backpressure control, and safe close states), `alts_` fair multi-channel multiplexing selection, high-precision `timeout` helper, and `@go` background decorators with unhandled exception broadcasting.
 *   **🔀 Transducers Pipelined Rendering Middleware**: Integrates Clojure-like `Transducer` pipeline interceptors supporting DFS immutable tree transformations on Hiccup layouts. Ships with `LoadingTransducer` (automatic interactive spinner class injection) and `SanitizingTransducer` (audited regex key masking).
+*   **⏳ State Snapshot & Time-Travel Debugger**: Natively supports `Signal.with_history()` state snapshot logging, allowing step-by-step undo and redo. Features a premium out-of-the-box Time Travel visualization debug panel with robust multi-session isolation.
+*   **🧬 Datalog-lite Declarative Query Engine**: Modeled after Datomic's architecture with double-key EAVT, AVE, VAE indices. Features a dynamic Logic Unification query solver, heuristic Join Reordering optimization, GraphQL-like Pull API, lazy Entity graph navigation, and complete `as_of` historical snapshot querying.
 *   **🎨 Built-in DaisyUI & TailwindCSS**: Ships with integrated premium dark-mode glassmorphic components (DaisyUI) and utility-first styling (TailwindCSS) to build stunning user interfaces out-of-the-box.
 *   **🌿 Client-Side Acceleration with Alpine.js**: Bypasses verbose custom scripts in favor of Alpine.js, permitting high-frequency client-side interactions (like 60fps local ticking clocks and real-time clock skew calculation) defined as native attributes.
 *   **📦 100% Offline & Air-Gapped Ready**: All critical static assets (`tailwind.js`, `daisyui.css`, `alpine.js`, `htmx.js`) are fully hosted locally in the `static/` folder. Build and deploy fast reactive applications in completely disconnected physical networks.
@@ -204,7 +206,7 @@ With AI Agents (like Antigravity) and Copilots becoming core drivers of developm
 
 4. **⚡ Blazing Fast Testing & Self-Healing Loops**:
    - Zero Webpack/Vite build steps to wait for.
-   - Hiccl components can run end-to-end assertions in pure Python memory (over **140 tests in just 0.3 seconds!**). This sub-second feedback loop enables AI agents to execute dozens of test-and-repair iterations in seconds.
+   - Hiccl components can run end-to-end assertions in pure Python memory (over **210+ tests in just 0.3 seconds!**). This sub-second feedback loop enables AI agents to execute dozens of test-and-repair iterations in seconds.
 
 ---
 
@@ -257,7 +259,7 @@ Once `mise` is activated, you can execute these highly optimized tasks from your
 | :--- | :--- | :--- |
 | **`mise run lint`** | **Run Static Linter**. Inspects the codebase using Ruff check for potential errors. | `ruff check` |
 | **`mise run format`** | **Code Formatter**. Automatically formats code style, indentation, and structure. | `ruff format` |
-| **`mise run test`** | **Run Unit Tests**. Runs 140+ highly optimized unit tests in milliseconds using Pytest. | `uv run -m pytest` |
+| **`mise run test`** | **Run Unit Tests**. Runs 210+ highly optimized unit tests in milliseconds using Pytest. | `uv run -m pytest` |
 | **`mise run build`** | **Build Packages**. Builds the source and wheel distribution artifacts. | `uv run -m build` |
 | **`mise run check`** | **Pre-publish Validation**. Validates distribution metadata for PyPI using Twine. | `uv run -m twine check dist/*` |
 
@@ -275,7 +277,7 @@ Before submitting any Pull Request (PR), please verify that your changes adhere 
 2.  **Formatter Adheres Completely**:
     Run `mise run format` to automatically format all files. No code modifications should deviate from the configured Ruff format settings.
 3.  **100% Unit Test Pass Rate**:
-    Run `mise run test`. **Every single test case must pass without exceptions or failures.** Thanks to the high-efficiency architecture, all 140+ tests execute in less than 0.5s!
+    Run `mise run test`. **Every single test case must pass without exceptions or failures.** Thanks to the high-efficiency architecture, all 210+ tests execute in less than 0.5s!
 
 > [!IMPORTANT]
 > The project CI executes strict formatting, linting, and pytest suites on every PR. Any failure in these stages will block merging. Please run these check tasks locally before committing and pushing.

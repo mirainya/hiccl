@@ -10,6 +10,7 @@ from typing import Any, Generic, TypeVar
 
 try:
     import pyrsistent
+
     HAS_PYRSISTENT = True
 except ImportError:
     HAS_PYRSISTENT = False

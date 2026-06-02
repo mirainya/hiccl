@@ -11,7 +11,6 @@
 
 from __future__ import annotations
 
-import os
 from hiccl import (
     Component,
     ComponentRegistry,
@@ -27,10 +26,6 @@ from hiccl import (
     subscribe,
     dispatch,
 )
-
-# Initialize global registry so that @component decorators register automatically
-registry = ComponentRegistry()
-set_registry(registry)
 from hiccl.hiccup import (
     div,
     h1,
@@ -44,6 +39,10 @@ from hiccl.hiccup import (
     ul,
     raw,
 )
+
+# Initialize global registry so that @component decorators register automatically
+registry = ComponentRegistry()
+set_registry(registry)
 
 # ---------------------------------------------------------------------------
 # 1. 全局 re-frame DB 状态与事件设计 (全局 DB 自动升级为 HistorySignal)
@@ -143,9 +142,13 @@ class CounterBox(Component):
                 {
                     "class": "flex flex-col items-center justify-center bg-black/35 py-6 rounded-xl border border-white/5"
                 },
-                span({"class": "text-xs opacity-50 mb-1 font-mono"}, "当前数值 (Count)"),
                 span(
-                    {"class": "text-5xl font-black text-white font-mono tracking-tight animate-pulse"},
+                    {"class": "text-xs opacity-50 mb-1 font-mono"}, "当前数值 (Count)"
+                ),
+                span(
+                    {
+                        "class": "text-5xl font-black text-white font-mono tracking-tight animate-pulse"
+                    },
                     str(val),
                 ),
             ),
@@ -213,7 +216,7 @@ class ColorCanvas(Component):
             color_balls.append(
                 button(
                     {
-                        "class": f"w-8 h-8 rounded-full {bg_class} hover:scale-125 hover:shadow-lg transition-all duration-200 border-2 { 'border-white scale-110 shadow-md shadow-white/30' if is_active else 'border-transparent' }",
+                        "class": f"w-8 h-8 rounded-full {bg_class} hover:scale-125 hover:shadow-lg transition-all duration-200 border-2 {'border-white scale-110 shadow-md shadow-white/30' if is_active else 'border-transparent'}",
                         "on_click": self.change_color(hex_val=hex_code),
                         "title": name,
                     },
@@ -247,7 +250,9 @@ class ColorCanvas(Component):
             ),
             # 色彩选择栏
             div(
-                {"class": "flex justify-around items-center bg-black/20 py-2.5 px-1 rounded-xl border border-white/5"},
+                {
+                    "class": "flex justify-around items-center bg-black/20 py-2.5 px-1 rounded-xl border border-white/5"
+                },
                 *color_balls,
             ),
         )
@@ -293,7 +298,11 @@ def TimeTravelTodo():
             },
             div(None, span({"class": "opacity-50"}, "总事件数: "), total),
             div(None, span({"class": "opacity-50 text-success"}, "已完成: "), done),
-            div(None, span({"class": "opacity-50 text-warning"}, "待完成: "), total - done),
+            div(
+                None,
+                span({"class": "opacity-50 text-warning"}, "待完成: "),
+                total - done,
+            ),
         ),
         # 任务列表渲染
         ul(
@@ -335,7 +344,10 @@ def TimeTravelTodo():
                 }
             ),
             button(
-                {"type": "submit", "class": "btn btn-success btn-sm join-item font-bold"},
+                {
+                    "type": "submit",
+                    "class": "btn btn-success btn-sm join-item font-bold",
+                },
                 "添加",
             ),
         ),
@@ -356,15 +368,21 @@ class TimeTravelSandbox(Component):
 
         counter_comp = self._session.get_component("counter-box-main")
         if counter_comp is None:
-            counter_comp = self._session.mount_component("counter-box", cid="counter-box-main")
+            counter_comp = self._session.mount_component(
+                "counter-box", cid="counter-box-main"
+            )
 
         color_comp = self._session.get_component("color-canvas-main")
         if color_comp is None:
-            color_comp = self._session.mount_component("color-canvas", cid="color-canvas-main")
+            color_comp = self._session.mount_component(
+                "color-canvas", cid="color-canvas-main"
+            )
 
         todo_comp = self._session.get_component("todo-main")
         if todo_comp is None:
-            todo_comp = self._session.mount_component("time-travel-todo", cid="todo-main")
+            todo_comp = self._session.mount_component(
+                "time-travel-todo", cid="todo-main"
+            )
 
         return div(
             {"class": "flex flex-col gap-6 w-full"},
@@ -381,7 +399,9 @@ class TimeTravelSandbox(Component):
                     "Hiccl 反应式时间旅行沙盒",
                 ),
                 p(
-                    {"class": "text-xs text-base-content/60 leading-relaxed font-medium"},
+                    {
+                        "class": "text-xs text-base-content/60 leading-relaxed font-medium"
+                    },
                     "Clojure 撤销重做哲学在 Python 全栈反应式生态下的惊艳落地。操作下方任何卡片，随后使用右下角的「时间调试器面板」滑块，即可瞬间在历史状态中穿梭！",
                 ),
             ),

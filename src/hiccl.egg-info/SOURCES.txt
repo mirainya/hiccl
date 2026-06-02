@@ -6,6 +6,7 @@ src/hiccl/app.py
 src/hiccl/cli.py
 src/hiccl/component.py
 src/hiccl/csp.py
+src/hiccl/datalog.py
 src/hiccl/diff.py
 src/hiccl/eventbus.py
 src/hiccl/hiccup.py
@@ -30,6 +31,7 @@ src/hiccl.egg-info/requires.txt
 src/hiccl.egg-info/top_level.txt
 src/hiccl/live_reload/__init__.py
 src/hiccl/live_reload/reloader.py
+src/hiccl/live_reload/time_travel.py
 src/hiccl/live_reload/watcher.py
 src/hiccl/repl/__init__.py
 src/hiccl/repl/protocol.py
@@ -48,6 +50,7 @@ src/hiccl/transport/websocket.py
 tests/test_babashka.py
 tests/test_cascade_static.py
 tests/test_component.py
+tests/test_datalog.py
 tests/test_diff.py
 tests/test_hiccup.py
 tests/test_offline_mode.py
@@ -55,6 +58,7 @@ tests/test_phase1.py
 tests/test_phase2.py
 tests/test_phase3.py
 tests/test_phase4.py
+tests/test_phase5a.py
 tests/test_redis_store.py
 tests/test_registry.py
 tests/test_renderer.py

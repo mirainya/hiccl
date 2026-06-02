@@ -85,7 +85,9 @@ async def hiccl_sse(
 
     def wrap_mark_dirty(comp_id: str) -> None:
         scheduler.mark_dirty(comp_id)
-        if comp_id != "time-travel-panel-main" and session.get_component("time-travel-panel-main"):
+        if comp_id != "time-travel-panel-main" and session.get_component(
+            "time-travel-panel-main"
+        ):
             scheduler.mark_dirty("time-travel-panel-main")
 
     session.on_signal_change = wrap_mark_dirty

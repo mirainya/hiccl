@@ -50,7 +50,13 @@ from hiccl.registry import ComponentRegistry, component, set_registry
 from hiccl.renderer import HiccupRenderer, autobind
 from hiccl.scheduler import RenderScheduler
 from hiccl.session import Session
-from hiccl.signal import ComputedSignal, Effect, Signal, batch, HistorySignal, signal_with_history
+from hiccl.signal import (
+    ComputedSignal,
+    Effect,
+    Signal,
+    batch,
+    HistorySignal,
+)
 from hiccl.transport.protocol import NullTransport, Transport
 from hiccl.diff import Diff, DiffEngine
 from hiccl.component import use_signal
@@ -62,6 +68,7 @@ from hiccl.transducers import (
     SanitizingTransducer,
     walk_tree,
 )
+from hiccl.datalog import Database, Datom, var
 
 
 def signal(initial):
@@ -184,4 +191,8 @@ __all__ = [
     "LoadingTransducer",
     "SanitizingTransducer",
     "walk_tree",
+    # Datalog-lite
+    "Database",
+    "Datom",
+    "var",
 ]

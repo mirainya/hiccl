@@ -48,6 +48,8 @@
 *   **🧩 Reagent 风格纯函数组件与单向数据流**：引入以 `@component` 装饰的纯展示层组件，支持使用 `use_signal()`、`subscribe()` 派生订阅及 `dispatch()` 进行单向数据流事件派发，实现 UI 与副作用的深度解耦。
 *   **📡 Clojure-like CSP 并发管道编排**：全面支持 Pythonic `Channel`（具备背压、同步/缓冲通道及安全 close 状态）、`alts_` 公平多路多信道选择原语、`timeout` 毫秒级高精度超时通道，以及配合 EventBus 异常广播的 `@go` 后台任务调度器。
 *   **🔀 Transducers 渲染管线切面中间件**：提供对 Hiccup 虚拟 DOM 树的自底向上 DFS 不可变变换器（`Transducer` 树遍历基类），内置 `LoadingTransducer`（自动按键 Loading 菊花态置换）与 `SanitizingTransducer`（日志敏感数据安全脱敏拦截器）。
+*   **⏳ 状态快照与时间旅行调试器**：支持 `Signal.with_history()` 状态快照与撤销/重做操作，提供开箱即用的高颜值可视化时间旅行调试面板，支持多会话状态安全隔离。
+*   **🧬 Datalog-lite 声明式查询引擎**：基于 Datomic 哲学实现 EAVT/AVE/VAE 双键哈希索引，支持 Logic Unification 逻辑求解器、Join 重排序优化、声明式 Pull API 与 Entity 延迟图导航，支持 `as_of` 历史回溯查询。
 *   **🎨 内置 DaisyUI & TailwindCSS**：默认集成顶级暗色调毛玻璃组件库（DaisyUI）和原子化样式（TailwindCSS），开箱即用构建极其现代、高级的用户界面。
 *   **🌿 Alpine.js 客户端加速**：完全移除传统的 Hyperscript，深度整合 Alpine.js，支持以标准的 HTML 属性在浏览器端运行极速的交互渲染（如每秒 60 帧的高频计时器与毫秒级时差偏差计算）。
 *   **📦 100% 离线与内网就绪（Air-gapped Ready）**：所有静态依赖（`tailwind.js`、`daisyui.css`、`alpine.js`、`htmx.js`）完全本地托管于 `static/` 目录下。无需任何互联网连接即可在隔离的物理内网高速运行。
@@ -204,7 +206,7 @@ graph TD
 
 4. **⚡ 极致飞速的开发与自愈反馈**：
    - 去除了前端繁琐的 Vite/Webpack 打包编译链。
-   - Hiccl 组件可以直接在 Python 内存中以毫秒级运行单元测试（**140 个测试仅需 0.3 秒！**）。超高速的反馈环能让 AI Agent 在几秒内完成十几次自主迭代，达到惊人的开发成功率。
+   - Hiccl 组件可以直接在 Python 内存中以毫秒级运行单元测试（**210+ 个测试仅需 0.3 秒！**）。超高速的反馈环能让 AI Agent 在几秒内完成十几次自主迭代，达到惊人的开发成功率。
 
 ---
 
@@ -257,7 +259,7 @@ python3 examples/combined_app.py
 | :--- | :--- | :--- |
 | **`mise run lint`** | **代码静态检查**。使用 Ruff 对代码进行规范与潜在 Bugs 检查。 | `ruff check` |
 | **`mise run format`** | **代码自动格式化**。使用 Ruff 格式化代码，确保缩进、引号等完全一致。 | `ruff format` |
-| **`mise run test`** | **运行单元测试**。使用 Pytest 极速执行 140+ 完备单元测试。 | `uv run -m pytest` |
+| **`mise run test`** | **运行单元测试**。使用 Pytest 极速执行 210+ 完备单元测试。 | `uv run -m pytest` |
 | **`mise run build`** | **项目打包构建**。将项目编译为源码发布包与二进制 Wheel。 | `uv run -m build` |
 | **`mise run check`** | **PyPI 发布前合规检查**。检查构建结果元数据是否符合标准。 | `uv run -m twine check dist/*` |
 
@@ -275,7 +277,7 @@ python3 examples/combined_app.py
 2.  **代码格式化（Format）合格**：
     运行 `mise run format` 将代码进行统一格式化。所有的代码修改必须符合 Ruff 配置的格式规范（不产生任何格式差异）。
 3.  **单元测试 100% 通过（Pytest）**：
-    运行 `mise run test`。**所有的单元测试用例必须 100% 成功通过（无任何失败或错误）**。由于我们使用了极速的反应式架构，140+ 测试在半秒内即可全部跑完！
+    运行 `mise run test`。**所有的单元测试用例必须 100% 成功通过（无任何失败或错误）**。由于我们使用了极速的反应式架构，210+ 测试在半秒内即可全部跑完！
 
 > [!IMPORTANT]
 > 持续集成 (CI) 会对每次 PR 进行严格的 Lint、Format 与 Pytest 校验。上述三项中有任何一项未通过，PR 将无法被合并。请在本地提交前，务必运行一遍所有的验证任务。

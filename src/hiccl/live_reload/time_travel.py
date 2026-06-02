@@ -5,8 +5,8 @@ from __future__ import annotations
 import json
 from hiccl.component import Component, server
 from hiccl.registry import component
-from hiccl.hiccup import div, button, span, input_, p, raw, fragment
-from hiccl.signal import HistorySignal, Signal
+from hiccl.hiccup import div, button, span, input_, p, raw
+from hiccl.signal import Signal
 
 
 @component("time-travel-panel")
@@ -108,9 +108,7 @@ class TimeTravelPanel(Component):
                     div(
                         {"class": "flex justify-between items-center"},
                         span(
-                            {
-                                "class": "font-bold text-sm text-accent tracking-wide"
-                            },
+                            {"class": "font-bold text-sm text-accent tracking-wide"},
                             display_name,
                         ),
                         span(
@@ -166,9 +164,7 @@ class TimeTravelPanel(Component):
         if not signals_html:
             signals_html.append(
                 p(
-                    {
-                        "class": "text-xs text-base-content/50 text-center py-4"
-                    },
+                    {"class": "text-xs text-base-content/50 text-center py-4"},
                     "当前无被追踪的历史信号",
                 )
             )

@@ -20,17 +20,15 @@
 | **v0.2.0** | Phase 1 | HMR Live Reload + hREPL 交互式开发 | Phase 0 | ✅ 已完成 |
 | **v0.3.0** | Phase 2 | `hiccl.spec` DSL + `@server` 契约验证 + Redis SessionStore | Phase 0 | ✅ 已完成 |
 | **v0.4.0** | Phase 3 核心 | Reagent 纯函数组件 + re-frame 订阅系统 + `hiccl.testing` 单元测试工具 | Phase 1 | ✅ 已完成 |
-| **v0.4.1** | Phase 3 增强 | Spec × Hypothesis 生成式测试 + 契约加固层 | Phase 2, Phase 3 核心 | 2–3 周 |
+| **v0.4.1** | Phase 3 增强 | Spec × Hypothesis 生成式测试 + 契约加固层 | Phase 2, Phase 3 核心 | ✅ 已完成 |
 | **v0.5.0** | Phase 4 | CSP Channel + Transducers 中间件 | Phase 0 | ✅ 已完成 |
-| **v0.6.0** | Phase 5a | `Signal.with_history()` 状态快照与时间旅行 | Phase 0 | 3–4 周 |
-| **v0.7.0** | Phase 5b（可选） | Datalog-lite 声明式查询引擎 | Phase 5a | 独立子项目 |
-| **v1.0.0** | 生产就绪 | 全量文档 + API Reference + 性能基准 + 安全审计 | 全部 | — |
+| **v0.6.0** | Phase 5a | `Signal.with_history()` 状态快照与时间旅行 | Phase 0 | ✅ 已完成 |
+| **v0.7.0** | Phase 5b | Datalog-lite 声明式查询引擎 | Phase 5a | ✅ 已完成 |
+| **v1.0.0** | 生产就绪 | 全量文档 + API Reference + 性能基准 + 安全审计 | 全部 | 进行中 |
 
 > [!TIP]
-> **Phase 1 和 Phase 2 无相互依赖**，可以并行推进。
-> **Phase 3 核心 (函数组件 + re-frame) 不再硬依赖 Phase 2 的 Spec 契约**，只需依赖 Phase 1 以便支持纯函数热重载。Spec 契约结合生成式测试作为 v0.4.1 的增强补丁引入。
-> Phase 4 和 Phase 5a 也独立于 Spec系统。
-> Phase 5b（Datalog-lite）定位为**可选的独立子项目**，不作为主框架 v1.0 的硬性前提。
+> **所有核心与高阶开发阶段（Phase 0 至 Phase 5b）目前均已全部成功交付，并经过 210+ 单元测试验证！**
+> 框架目前全面步入 **v1.0.0 生产就绪** 阶段，后续工作重心将主要集中在 MkDocs 全量文档、规范的 API 参考手册、安全合规审计与高级特性性能调优。
 
 ### ⚠️ 版本兼容策略 (Breaking Change Policy)
 
@@ -74,10 +72,10 @@
 +---------------------------+---------------------------+
                             |
               +-------------+-------------+
-              |                           |  [可并行推进]
+              |                           |  [已完成]
               v                           v
 +-----------------------------+  +-----------------------------+
-|  Phase 1 (v0.2.0):          |  |  Phase 2 (v0.3.0):          |
+|  Phase 1 (v0.2.0): ✅       |  |  Phase 2 (v0.3.0): ✅       |
 |  HMR + hREPL 开发体验       |  |  hiccl.spec 契约系统        |
 |  - DOM 级热重载引擎          |  |  - 声明式 Spec DSL          |
 |  - hREPL 网络 REPL 服务器    |  |  - @server 边界验证          |
@@ -87,7 +85,7 @@
               |                                |
               v                                |
 +-----------------------------+                |
-|  Phase 3 核心 (v0.4.0):      |                |
+|  Phase 3 核心 (v0.4.0): ✅   |                |
 |  纯函数组件 + re-frame        |                |
 |  - use_signal (FP 组件)     |                |
 |  - re-frame (reg_sub/event) |                |
@@ -98,30 +96,30 @@
                               |
                               v
 +-------------------------------------------------------+
-|  Phase 3 增强 (v0.4.1): Spec 契约结合                 |
+|  Phase 3 增强 (v0.4.1): Spec 契约结合 ✅               |
 |  - Spec × Hypothesis 生成式测试                        |
 |  - 契约式自愈与错误边界                                |
 +---------------------------+---------------------------+
                             |
               +-------------+-------------+
-              |                           |  [可并行推进]
+              |                           |  [已完成]
               v                           v
 +-----------------------------+  +-----------------------------+
-|  Phase 4 (v0.5.0):          |  |  Phase 5a (v0.6.0):         |
+|  Phase 4 (v0.5.0): ✅        |  |  Phase 5a (v0.6.0): ✅       |
 |  CSP Channel + Transducers  |  |  Signal.with_history()      |
 |  - put/get/close/alts_      |  |  - 不可变状态快照            |
 |  - Transducer 渲染中间件     |  |  - 撤销/重做/时间旅行       |
 |  - 背压控制与高阶流程 DSL    |  |  - Chrome DevTools 面板     |
 +-----------------------------+  +-------------+---------------+
-                                              |
-                                              v  [可选独立子项目]
-                                 +-----------------------------+
-                                 |  Phase 5b (v0.7.0):         |
-                                 |  Datalog-lite 查询引擎       |
-                                 |  - EAVT 索引结构             |
-                                 |  - 声明式查询 DSL            |
-                                 |  - 可作为永久的独立 repo      |
-                                 +-----------------------------+
+                                               |
+                                               v  [已完成]
+                                  +-----------------------------+
+                                  |  Phase 5b (v0.7.0): ✅       |
+                                  |  Datalog-lite 查询引擎       |
+                                  |  - EAVT 索引结构             |
+                                  |  - 声明式查询 DSL            |
+                                  |  - 可作为永久的独立 repo      |
+                                  +-----------------------------+
 ```
 
 ---
@@ -568,7 +566,7 @@ def event_add_todo(db, text: str):
 
 ---
 
-### 📅 Phase 3 增强 —— Spec 契约结合与生成式测试 (v0.4.1)
+### 📅 Phase 3 增强 —— Spec 契约结合与生成式测试 (v0.4.1) ✅ 已完成
 
 *   **核心目标**：将 Phase 2 的 `hiccl.spec` 契约系统深层嵌入到 Phase 3 的数据流中，实现高强度的生成式属性测试与接口自愈。
 *   **前置依赖**：依赖 Phase 2（Spec 系统）与 Phase 3 核心。
@@ -671,7 +669,7 @@ class AutoloadingTransducer(Transducer):
 
 ---
 
-### 📅 Phase 5a —— `Signal.with_history()` 状态快照与时间旅行 (v0.6.0)
+### 📅 Phase 5a —— `Signal.with_history()` 状态快照与时间旅行 (v0.6.0) ✅ 已完成
 
 *   **核心目标**：为 Signal 系统增加不可变快照回溯能力，实现撤销/重做与时间旅行调试。
 *   **前置依赖**：仅依赖 Phase 0。**可独立推进**。
@@ -704,7 +702,7 @@ class Counter(Component):
 
 ---
 
-### 📅 Phase 5b —— Datalog-lite 声明式查询引擎 (v0.7.0) [可选]
+### 📅 Phase 5b —— Datalog-lite 声明式查询引擎 (v0.7.0) ✅ 已完成
 
 > [!WARNING]
 > **风险评估**：真正的 Datomic 是一个完整的分布式不可变数据库，`pyrsistent.PMap` 只是不可变数据结构的冰山一角。即使是"lite"版的 Datalog 查询引擎也涉及统一的 EAVT 索引结构，复杂度远超几百行 Python。**建议作为独立子项目（独立 repo）推进，不作为主框架 v1.0 的硬性前提。**
