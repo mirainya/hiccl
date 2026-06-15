@@ -94,12 +94,17 @@
     var disconnected = false;
 
     function wireStream() {
+      var streamLived = false;
       disconnected = false;
       setStatus(cid, "connecting");
       term.write("\x1b[33mconnecting to shell...\x1b[0m\r\n");
 
       currentStream = hicclClient.createStream(STREAM_NAME, cid, {
         onData: function (data) {
+          if (!streamLived) {
+            streamLived = true;
+            setStatus(cid, "live");
+          }
           term.write(data);
         },
         onClose: function () {

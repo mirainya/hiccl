@@ -35,7 +35,6 @@ import warnings
 
 from hiccl import Component, ComponentRegistry, HicclConfig, create_hiccl_app, menu
 from hiccl.hiccup import div, h2, p, raw, span
-from hiccl.signal import Signal
 from hiccl.transport.stream import StreamClosedError
 
 
@@ -338,8 +337,8 @@ class WebShellComponent(Component):
         self.stream = None
         self._loop: asyncio.AbstractEventLoop | None = None
         self._read_queue: asyncio.Queue | None = None
-        self._tasks: list[asyncio.Task] = []
-        self.pty_status = Signal("connecting")
+        self._pumps: list[asyncio.Task] = []
+        self._watchdog_task: asyncio.Task | None = None
 
     # -- lifecycle ---------------------------------------------------------
 
@@ -348,7 +347,6 @@ class WebShellComponent(Component):
         self._teardown()
         self.stream = stream
         self._loop = asyncio.get_running_loop()
-        self.pty_status.set("connecting")
         try:
             self.pty = PtyProcess(
                 detect_command(container_label=self.component_id),
@@ -356,7 +354,6 @@ class WebShellComponent(Component):
             )
             self.pty.start()
         except Exception as exc:  # pragma: no cover - environment dependent
-            self.pty_status.set("closed")
             try:
                 await stream.send(
                     f"\r\n\x1b[31m*** failed to start shell: {exc} ***\x1b[0m\r\n".encode()
@@ -364,16 +361,18 @@ class WebShellComponent(Component):
             except Exception:
                 pass
             return
-        self.pty_status.set("live")
         self._read_queue = asyncio.Queue()
         self._loop.add_reader(self.pty.master_fd, self._on_pty_readable)
-        self._tasks = [
+        self._pumps = [
             asyncio.create_task(self._pump_pty_to_stream()),
             asyncio.create_task(self._pump_stream_to_pty()),
-            asyncio.create_task(self._watchdog()),
         ]
+        self._watchdog_task = asyncio.create_task(self._watchdog())
 
     def unmount(self) -> None:
+        if self._watchdog_task is not None:
+            self._watchdog_task.cancel()
+            self._watchdog_task = None
         self._teardown()
         if self.stream is not None and not self.stream.closed:
             self.stream.close_sync()
@@ -439,23 +438,30 @@ class WebShellComponent(Component):
         Covers both exit paths: the user typing ``exit`` (PTY EOF → pty pump
         ends) and the client disconnecting / closing the stream (stream pump
         ends). FIRST_COMPLETED so an idle PTY is still reaped on disconnect.
+
+        NOTE: ``_teardown()`` only cancels the *pumps*, not this watchdog
+        itself.  That way we can ``await self.stream.close()`` after teardown
+        and the async close will actually run, sending ``stream_close`` to the
+        client so the JS ``onClose`` handler can update the status badge.
         """
-        pumps = self._tasks[:2]
+        pumps = list(self._pumps)
         try:
             await asyncio.wait(pumps, return_when=asyncio.FIRST_COMPLETED)
         except Exception:
             pass
         self._teardown()
-        self.pty_status.set("closed")
         if self.stream is not None and not self.stream.closed:
             await self.stream.close()
         self.stream = None
         self._read_queue = None
+        self._watchdog_task = None
 
     def _teardown(self) -> None:
-        for task in list(self._tasks):
+        """Cancel pump tasks and kill the PTY. Does NOT touch the watchdog or
+        close the stream — callers must handle stream cleanup themselves."""
+        for task in list(self._pumps):
             task.cancel()
-        self._tasks = []
+        self._pumps = []
         if self.pty is not None:
             if self._loop is not None and self.pty.master_fd is not None:
                 try:
@@ -469,25 +475,6 @@ class WebShellComponent(Component):
 
     def render(self):
         cid = self.component_id
-        status = self.pty_status.get()
-
-        if status == "live":
-            badge_status_class = "badge badge-success"
-            badge_status_dot = span(
-                {"class": "w-2 h-2 rounded-full bg-emerald-300 animate-pulse"}
-            )
-            badge_status_text = "live"
-        elif status == "connecting":
-            badge_status_class = "badge badge-warning"
-            badge_status_dot = span(
-                {"class": "w-2 h-2 rounded-full bg-amber-300 animate-pulse"}
-            )
-            badge_status_text = "connecting"
-        else:
-            badge_status_class = "badge badge-ghost"
-            badge_status_dot = ""
-            badge_status_text = "closed"
-
         return div(
             {
                 "class": "card bg-slate-900/90 border border-slate-700/50 backdrop-blur-xl shadow-2xl mx-auto w-full max-w-5xl"
@@ -514,10 +501,14 @@ class WebShellComponent(Component):
                     div(
                         {
                             "id": f"term-status-{cid}",
-                            "class": f"{badge_status_class} gap-1 font-mono text-xs py-3",
+                            "class": "badge badge-success gap-1 font-mono text-xs py-3",
                         },
-                        badge_status_dot,
-                        " " + badge_status_text,
+                        span(
+                            {
+                                "class": "w-2 h-2 rounded-full bg-emerald-300 animate-pulse"
+                            }
+                        ),
+                        "live",
                     ),
                 ),
                 div(
