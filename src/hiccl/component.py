@@ -253,6 +253,7 @@ class Component:
         self.component_id = f"{self.__class__.__name__.lower()}-{uuid.uuid4().hex[:8]}"
         self._signals: dict[str, Signal[Any]] = {}
         self._effects: list[Any] = []
+        self._owned_streams: list[str] = []
         # Store props for later initialization
         self._pending_props = props
 
@@ -297,6 +298,43 @@ class Component:
 
     def unmount(self) -> None:
         """Called when the component is removed from a session."""
+        # Auto-close any streams this component opened.
+        owned = list(getattr(self, "_owned_streams", []) or [])
+        if owned:
+            self._owned_streams = []
+            session = getattr(self, "_session", None)
+            registry = getattr(session, "_stream_registry", None) if session else None
+            if registry is not None:
+                for stream in registry.all():
+                    if stream.name in owned and not stream.closed:
+                        stream.close_sync()
+
+    async def open_stream(self, name: str):
+        """Open a named raw byte stream owned by this component.
+
+        Records the stream name so it is auto-closed on ``unmount``. Convention
+        is to call this from ``mount()``.
+        """
+        from hiccl.transport.stream import Stream
+
+        session = getattr(self, "_session", None)
+        if session is None:
+            raise RuntimeError(
+                "open_stream() requires the component to be mounted to a session"
+            )
+        if name not in self._owned_streams:
+            self._owned_streams.append(name)
+        stream: Stream = session.open_stream(name, component_id=self.component_id)
+        return stream
+
+    def on_stream_open(self, stream: Any) -> Any:
+        """Called when a client opens a stream owned by this component.
+
+        Invoked by the transport after a ``stream_open`` control message
+        allocates a channel and the server has acked it. Override to react to
+        the freshly opened stream — e.g. spawn a PTY and pump bytes both ways.
+        May be a coroutine; the transport awaits it if so.
+        """
         pass
 
     def on_broadcast(self, topic: str) -> None:

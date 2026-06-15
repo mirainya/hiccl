@@ -50,6 +50,7 @@
 *   **🔀 Transducers 渲染管线切面中间件**：提供对 Hiccup 虚拟 DOM 树的自底向上 DFS 不可变变换器（`Transducer` 树遍历基类），内置 `LoadingTransducer`（自动按键 Loading 菊花态置换）与 `SanitizingTransducer`（日志敏感数据安全脱敏拦截器）。
 *   **⏳ 状态快照与时间旅行调试器**：支持 `Signal.with_history()` 状态快照与撤销/重做操作，提供开箱即用的高颜值可视化时间旅行调试面板，支持多会话状态安全隔离。
 *   **🧬 Datalog-lite 声明式查询引擎**：基于 Datomic 哲学实现 EAVT/AVE/VAE 双键哈希索引，支持 Logic Unification 逻辑求解器、Join 重排序优化、声明式 Pull API 与 Entity 延迟图导航，支持 `as_of` 历史回溯查询。
+*   **🔀 多路复用二进制流传输**（设计阶段）：利用 WebSocket 原生帧类型实现 Text/Binary 双通道复用 —— JSON 协议走 Text 帧，原始字节流走 Binary 帧。支持 Web 终端（ttyd/gotty 风格）、在线游戏、实时协作等高实时性双向数据场景。详见 [设计文档](docs/plans/stream-transport.md)。
 *   **🎨 内置 DaisyUI & TailwindCSS**：默认集成顶级暗色调毛玻璃组件库（DaisyUI）和原子化样式（TailwindCSS），开箱即用构建极其现代、高级的用户界面。
 *   **🌿 Alpine.js 客户端加速**：完全移除传统的 Hyperscript，深度整合 Alpine.js，支持以标准的 HTML 属性在浏览器端运行极速的交互渲染（如每秒 60 帧的高频计时器与毫秒级时差偏差计算）。
 *   **📦 100% 离线与内网就绪（Air-gapped Ready）**：所有静态依赖（`tailwind.js`、`daisyui.css`、`alpine.js`、`htmx.js`）完全本地托管于 `static/` 目录下。无需任何互联网连接即可在隔离的物理内网高速运行。
@@ -184,7 +185,7 @@ graph TD
 
 1.  **Hiccup UI 引擎**：负责将 Python 列表转化为标准 HTML。渲染时，带有 `@server` 修饰器的属性（如 `on_click`）会被智能捕捉并转化为底层的网络事件。
 2.  **增量 Diff 引擎**：任何服务端的 `Signal` 状态变更触发 Effect。框架仅重新渲染脏组件，计算并提取最小补丁，以最小的数据开销实时更新客户端。
-3.  **多路传输层（SSE/WebSockets）**：无缝支持高频实时状态同步。
+3.  **多路传输层（SSE/WebSockets）**：无缝支持高频实时状态同步。WebSocket 连接支持 Text 帧（JSON 协议）与 Binary 帧（多路复用字节流通道）并行传输。
 
 ---
 

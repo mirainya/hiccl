@@ -13,6 +13,7 @@ from hiccl.registry import ComponentRegistry
 from hiccl.renderer import HiccupRenderer
 from hiccl.signal import Effect
 from hiccl.transport.protocol import NullTransport, Transport
+from hiccl.transport.stream import Stream, StreamRegistry
 
 # Global session store
 _sessions: dict[str, Session] = {}
@@ -59,6 +60,14 @@ class Session:
         # EventBus integration
         self._event_queue: asyncio.Queue[Any] | None = None
         self._subscribed_topics: set[str] = set()
+
+        # Stream registry — lazy until the first transport attaches. Defaults
+        # are used until ``attach_stream_transport`` overrides them from config.
+        self._stream_max_channels: int = 16
+        self._stream_buffer_size: int = 64
+        self._stream_registry: StreamRegistry | None = None
+        self._stream_send_binary: Any = None
+        self._stream_on_close: Any = None
 
     def touch(self) -> None:
         """Refresh the last accessed timestamp."""
@@ -197,6 +206,72 @@ class Session:
                         comp.on_broadcast(topic)
                         break
 
+    # -- Streams ------------------------------------------------------------
+
+    def attach_stream_transport(
+        self,
+        on_send_binary: Any = None,
+        on_stream_close: Any = None,
+        max_channels: int | None = None,
+        buffer_size: int | None = None,
+    ) -> StreamRegistry:
+        """Bind (or rebind) the session's stream registry to a live transport.
+
+        Lazily creates the registry on first call. Subsequent calls (e.g. on
+        WebSocket reconnect) re-wire the transport callbacks without dropping
+        already-open streams. Returns the active registry.
+        """
+        if max_channels is not None:
+            self._stream_max_channels = max_channels
+        if buffer_size is not None:
+            self._stream_buffer_size = buffer_size
+        self._stream_send_binary = on_send_binary
+        self._stream_on_close = on_stream_close
+        if self._stream_registry is None:
+            self._stream_registry = StreamRegistry(
+                max_channels=self._stream_max_channels,
+                buffer_size=self._stream_buffer_size,
+                on_send_binary=on_send_binary,
+                on_stream_close=on_stream_close,
+            )
+        else:
+            self._stream_registry._on_send_binary = on_send_binary
+            self._stream_registry._on_stream_close = on_stream_close
+        return self._stream_registry
+
+    def _ensure_registry(self) -> StreamRegistry:
+        """Return the registry, creating an unbound one if needed."""
+        if self._stream_registry is None:
+            self._stream_registry = StreamRegistry(
+                max_channels=self._stream_max_channels,
+                buffer_size=self._stream_buffer_size,
+            )
+        return self._stream_registry
+
+    def get_stream(self, name: str) -> Stream | None:
+        """Look up an open stream by logical name."""
+        if self._stream_registry is None:
+            return None
+        return self._stream_registry.find(name)
+
+    def open_stream(self, name: str, component_id: str | None = None) -> Stream:
+        """Open a new named stream and return it.
+
+        Raises ``StreamLimitError`` if the per-session concurrency cap is hit.
+        """
+        return self._ensure_registry().open(name, component_id=component_id)
+
+    async def close_stream(self, name: str) -> bool:
+        """Close a stream by logical name. Returns True if a stream was closed."""
+        registry = self._stream_registry
+        if registry is None:
+            return False
+        stream = registry.find(name)
+        if stream is None:
+            return False
+        await registry.close(stream.channel_id)
+        return True
+
     # -- Cleanup -----------------------------------------------------------
 
     def dispose(self) -> None:
@@ -206,6 +281,12 @@ class Session:
             event_bus.unsubscribe_all(self._event_queue)
             self._event_queue = None
         self._subscribed_topics.clear()
+
+        # Close all open streams (synchronous best-effort; the WS/SSE
+        # disconnect paths perform the full async close_all with notifications).
+        if self._stream_registry is not None:
+            self._stream_registry.shutdown()
+            self._stream_registry = None
 
         # Dispose components
         for component in self._components.values():

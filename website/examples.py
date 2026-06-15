@@ -25,8 +25,8 @@ def register_examples(registry: ComponentRegistry) -> dict:
     set_registry(registry)
 
     # ── Phase 2: simple examples (no @component, no set_registry) ─────
-    from examples.counter.app import Counter
     from examples.chat.app import ChatRoom
+    from examples.counter.app import Counter
 
     TwoClocks, ServerTimeDisplay = _import(
         "examples.two-clocks.app",
@@ -40,9 +40,9 @@ def register_examples(registry: ComponentRegistry) -> dict:
         "PortfolioDisplay",
         "CashBalanceDisplay",
     )
-    (BabashkaTerminal,) = _import(
-        "examples.babashka.app",
-        "BabashkaTerminal",
+    (WebShellComponent,) = _import(
+        "examples.webshell.app",
+        "WebShellComponent",
     )
 
     # Register simple examples + their sub-components
@@ -50,7 +50,7 @@ def register_examples(registry: ComponentRegistry) -> dict:
     registry.register("server-time-display", ServerTimeDisplay)
     registry.register("two-clocks", TwoClocks)
     registry.register("chat-room", ChatRoom)
-    registry.register("babashka-terminal", BabashkaTerminal)
+    registry.register("webshell", WebShellComponent)
     registry.register("btc-price-display", BtcPriceDisplay)
     registry.register("portfolio-display", PortfolioDisplay)
     registry.register("cash-balance-display", CashBalanceDisplay)
@@ -122,7 +122,7 @@ def register_examples(registry: ComponentRegistry) -> dict:
         "/examples/counter": Counter,
         "/examples/two-clocks": TwoClocks,
         "/examples/chat": ChatRoom,
-        "/examples/babashka": BabashkaTerminal,
+        "/examples/webshell": WebShellComponent,
         "/examples/csp-crypto-trader": CryptoTrader,
         "/examples/time-travel": TimeTravelSandbox,
         "/examples/datalog": DatalogWebDemo,

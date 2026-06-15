@@ -534,35 +534,47 @@ EXAMPLES: list[dict] = [
         ),
     },
     {
-        "id": "babashka",
-        "route": "/examples/babashka",
+        "id": "webshell",
+        "route": "/examples/webshell",
         "icon": "🐚",
-        "tags": ["Shared State", "EventBus", "Subprocess"],
-        "title_zh": "Babashka 共享终端",
-        "title_en": "Babashka Shared Terminal",
+        "tags": ["Stream Transport", "PTY", "xterm.js"],
+        "title_zh": "WebShell 终端",
+        "title_en": "WebShell Terminal",
         "desc_zh": (
-            "交互式共享 REPL 终端。基于 Babashka (Clojure) 子进程，"
-            "多浏览器会话共享同一终端状态与输出流，类似 gotty 实时协同。"
+            "基于 Hiccl 流式传输的 Web 终端。每个浏览器会话获得独立 PTY 伪终端，"
+            "按键通过二进制流发送，PTY 输出通过流推送至 xterm.js 渲染，"
+            "支持 ANSI 颜色、窗口尺寸同步与实时双向通信。"
         ),
         "desc_en": (
-            "Interactive shared REPL terminal powered by Babashka (Clojure) subprocess. "
-            "Multiple browser sessions share the same terminal state and output stream."
+            "A real PTY terminal in the browser powered by Hiccl stream transport. "
+            "Each session gets its own pseudo-terminal with keystrokes streamed "
+            "over binary frames and PTY output rendered by xterm.js — full ANSI, "
+            "window resize sync, and real-time bidirectional communication."
         ),
-        "file": "babashka/app.py",
-        "lines": "391",
+        "file": "webshell/app.py",
+        "lines": "444",
         "code": (
-            "class BabashkaTerminal(Component):\n"
-            '    topics = ["bb-output"]\n'
+            "class WebShellComponent(Component):\n"
+            "    async def on_stream_open(self, stream):\n"
+            "        self.pty = PtyProcess(detect_command())\n"
+            "        self.pty.start()\n"
+            "        self._tasks = [\n"
+            "            asyncio.create_task(self._pump_pty_to_stream()),\n"
+            "            asyncio.create_task(self._pump_stream_to_pty()),\n"
+            "            asyncio.create_task(self._watchdog()),\n"
+            "        ]\n"
             "\n"
-            "    @server\n"
-            "    async def execute_code(self, code: str = ''):\n"
-            "        await shared_bb.write_input(code)\n"
+            "    async def _pump_pty_to_stream(self):\n"
+            "        data = await self._read_queue.get()\n"
+            "        await self.stream.send(data)\n"
             "\n"
-            "    def on_broadcast(self, topic: str):\n"
-            '        if topic == "bb-output":\n'
-            "            self.output.set(\n"
-            "                shared_bb.output_buffer[self.cleared_at:]\n"
-            "            )"
+            "    async def _pump_stream_to_pty(self):\n"
+            "        async for data in self.stream:\n"
+            "            kind, value = parse_terminal_frame(bytes(data))\n"
+            "            if kind == 'resize':\n"
+            "                self.pty.resize(*value)\n"
+            "            else:\n"
+            "                self.pty.write(value)"
         ),
     },
     {

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import base64
 import json
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -17,7 +18,12 @@ router = APIRouter()
 
 
 class SSETransport:
-    """Transport that pushes patches via an asyncio.Queue (consumed by SSE stream)."""
+    """Transport that pushes patches via an asyncio.Queue (consumed by SSE stream).
+
+    SSE cannot carry binary frames, so stream payloads are base64-encoded and
+    emitted as ``event: hiccl-stream`` messages. This makes streams effectively
+    server→client only over SSE; client→server traffic must fall back to HTTP.
+    """
 
     def __init__(self, queue: asyncio.Queue) -> None:
         self._queue = queue
@@ -26,6 +32,16 @@ class SSETransport:
     async def push(self, patches: list[dict]) -> None:
         data = json.dumps({"type": "batch", "patches": patches})
         await self._queue.put(f"event: hiccl\ndata: {data}\n\n")
+
+    async def send_binary(self, channel_id: int, data: bytes) -> None:
+        if not self._connected:
+            return
+        encoded = base64.b64encode(data).decode("ascii")
+        payload = json.dumps({"channel_id": channel_id, "data": encoded})
+        await self._queue.put(f"event: hiccl-stream\ndata: {payload}\n\n")
+
+    def supports_streams(self) -> bool:
+        return True
 
     def is_connected(self) -> bool:
         return self._connected
@@ -74,6 +90,20 @@ async def hiccl_sse(
     config = hiccl_state.get("config") if isinstance(hiccl_state, dict) else None
     coalesce_ms = getattr(config, "scheduler_coalesce_ms", 0.0) if config else 0.0
     scheduler = RenderScheduler(coalesce_ms=coalesce_ms)
+
+    # Wire up the stream registry to this SSE transport so that Stream.send()
+    # emits base64-encoded hiccl-stream events. Note: stream_open/close control
+    # messages from the client still arrive over HTTP (SSE is server→client only).
+    stream_enabled = getattr(config, "stream_enabled", True) if config else True
+    if stream_enabled:
+        max_channels = getattr(config, "stream_max_channels", 16) if config else 16
+        buffer_size = getattr(config, "stream_buffer_size", 64) if config else 64
+        session.attach_stream_transport(
+            on_send_binary=transport.send_binary,
+            on_stream_close=None,
+            max_channels=max_channels,
+            buffer_size=buffer_size,
+        )
 
     # Force a silent initial render of all mounted components that don't have active effects
     # to register all reactive effects, subscription watches, and setup their dependency tracking
@@ -149,8 +179,15 @@ async def hiccl_sse(
             transport.disconnect()
             from hiccl.transport.protocol import NullTransport
 
-            session.transport = NullTransport()
+            if session.transport is transport:
+                session.transport = NullTransport()
+            if session.on_signal_change is wrap_mark_dirty:
+                session.on_signal_change = None
             await scheduler.stop()
+            # Tear down any streams that were open on this SSE connection.
+            registry = getattr(session, "_stream_registry", None)
+            if registry is not None:
+                await registry.close_all()
 
     return StreamingResponse(
         event_stream(),

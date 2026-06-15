@@ -47,6 +47,34 @@ class BatchMessage(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+# Stream control messages (carried over text frames, JSON protocol)
+# ---------------------------------------------------------------------------
+
+
+class StreamOpenMessage(BaseModel):
+    """Client → server request to open a named stream."""
+
+    type: str = "stream_open"
+    stream: str
+    component_id: str = ""
+
+
+class StreamAckMessage(BaseModel):
+    """Server → client reply allocating a channel id for a stream."""
+
+    type: str = "stream_ack"
+    stream: str
+    channel_id: int
+
+
+class StreamCloseMessage(BaseModel):
+    """Either direction: tear down a stream by channel id."""
+
+    type: str = "stream_close"
+    channel_id: int
+
+
+# ---------------------------------------------------------------------------
 # Transport protocol — abstract interface for push channels
 # ---------------------------------------------------------------------------
 
@@ -63,6 +91,19 @@ class Transport(Protocol):
         """Return True if the transport is alive and can push."""
         ...
 
+    async def send_binary(self, channel_id: int, data: bytes) -> None:
+        """Send a raw binary payload on the given stream channel.
+
+        Optional capability: transports that cannot carry binary frames
+        (e.g. ``NullTransport``) either omit this method or no-op. Check
+        ``supports_streams()`` before relying on it.
+        """
+        ...
+
+    def supports_streams(self) -> bool:
+        """Return True if this transport can carry multiplexed byte streams."""
+        ...
+
 
 class NullTransport:
     """No-op transport — used when only HTTP request/response is available."""
@@ -71,4 +112,10 @@ class NullTransport:
         pass
 
     def is_connected(self) -> bool:
+        return False
+
+    async def send_binary(self, channel_id: int, data: bytes) -> None:
+        pass
+
+    def supports_streams(self) -> bool:
         return False

@@ -58,6 +58,13 @@ from hiccl.signal import (
     HistorySignal,
 )
 from hiccl.transport.protocol import NullTransport, Transport
+from hiccl.transport.stream import (
+    Stream,
+    StreamClosedError,
+    StreamError,
+    StreamLimitError,
+    StreamRegistry,
+)
 from hiccl.diff import Diff, DiffEngine
 from hiccl.component import use_signal
 from hiccl.re_frame import reg_state, reg_sub, reg_event, subscribe, dispatch
@@ -164,6 +171,12 @@ __all__ = [
     # Transport
     "Transport",
     "NullTransport",
+    # Streams (multiplexed byte channels)
+    "Stream",
+    "StreamRegistry",
+    "StreamError",
+    "StreamClosedError",
+    "StreamLimitError",
     # Diff Engine
     "Diff",
     "DiffEngine",

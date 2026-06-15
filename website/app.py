@@ -16,7 +16,7 @@ from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 
 from hiccl import ComponentRegistry, HicclConfig, create_hiccl_app
-from hiccl.app import _generate_font_tags
+from hiccl.app import CascadeStaticFiles, _generate_font_tags
 
 from .examples import register_examples
 from .i18n import detect_lang
@@ -26,6 +26,14 @@ from .landing import LandingPage
 # ── SEO meta tags ────────────────────────────────────────────────────
 
 XCLOAK_CSS = "<style>[x-cloak] { display: none !important; }</style>"
+
+_WEBSHELL_HEAD = """
+  <link rel="stylesheet" href="/static/xterm.css">
+  <script src="/static/xterm.min.js"></script>
+  <script src="/static/xterm-addon-fit.min.js"></script>
+  <script src="/static/xterm-addon-weblinks.min.js"></script>
+  <script src="/static/webshell.js"></script>
+"""
 
 SEO_META = """
   <meta name="description" content="Hiccl — A modern full-stack reactive web framework combining Clojure's Hiccup DSL with Pythonic state serialization. Pure Python, zero build, air-gapped ready.">
@@ -89,6 +97,7 @@ def website_layout(
   <script src="/static/hiccl.js"></script>
   {fonts_html}
   {config.head_extra}
+  {_webshell_head_if_needed(request)}
 </head>
 <body class="min-h-screen bg-base-100">
   <div id="global-spinner" class="htmx-indicator fixed inset-0 z-[9999] flex items-center justify-center bg-base-100/50 backdrop-blur-sm pointer-events-none opacity-0 transition-opacity">
@@ -145,16 +154,38 @@ def create_website_app() -> FastAPI:
     renderer = app.state.hiccl["renderer"]
     renderer.transducers.append(LoadingTransducer(loading_class="btn-loading"))
 
-    # Mount Hiccl's built-in static files (CSS/JS from framework)
+    # Mount Hiccl's built-in static files (CSS/JS from framework) +
+    # example-specific static dirs (webshell xterm.js, etc.)
     import os
 
     hiccl_static_dir = os.path.join(
         os.path.dirname(__file__), "..", "src", "hiccl", "static"
     )
+    examples_static_dir = os.path.join(
+        os.path.dirname(__file__), "..", "examples", "webshell", "static"
+    )
+
+    static_dirs = []
+    if os.path.isdir(examples_static_dir):
+        static_dirs.append(examples_static_dir)
     if os.path.isdir(hiccl_static_dir):
-        app.mount("/static", StaticFiles(directory=hiccl_static_dir), name="static")
+        static_dirs.append(hiccl_static_dir)
+
+    if static_dirs:
+        if len(static_dirs) == 1:
+            app.mount("/static", StaticFiles(directory=static_dirs[0]), name="static")
+        else:
+            app.mount(
+                "/static", CascadeStaticFiles(directories=static_dirs), name="static"
+            )
 
     return app
+
+
+def _webshell_head_if_needed(request: Request) -> str:
+    if request.url.path.startswith("/examples/webshell"):
+        return _WEBSHELL_HEAD
+    return ""
 
 
 # ── Main entry point ─────────────────────────────────────────────────

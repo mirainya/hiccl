@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import logging
 import os
 from collections.abc import Callable
@@ -29,13 +30,40 @@ class CascadeStaticFiles(StaticFiles):
     """StaticFiles subclass that searches multiple directories in order."""
 
     def __init__(self, directories: list[str], **kwargs):
-        import os
-
         existing_dirs = [d for d in directories if os.path.isdir(d)]
         if not existing_dirs:
             raise RuntimeError(f"None of the directories exist: {directories}")
         super().__init__(directory=existing_dirs[0], **kwargs)
         self.all_directories = existing_dirs
+
+
+def compute_static_hashes(static_dirs: list[str]) -> dict[str, str]:
+    hashes: dict[str, str] = {}
+    for d in static_dirs:
+        if not os.path.isdir(d):
+            continue
+        for fname in os.listdir(d):
+            fpath = os.path.join(d, fname)
+            if not os.path.isfile(fpath):
+                continue
+            if fname in hashes:
+                continue
+            sha = hashlib.sha256()
+            with open(fpath, "rb") as f:
+                while True:
+                    chunk = f.read(65536)
+                    if not chunk:
+                        break
+                    sha.update(chunk)
+            hashes[fname] = sha.hexdigest()[:16]
+    return hashes
+
+
+def _static_src(config: HicclConfig, filename: str) -> str:
+    h = config.static_hashes.get(filename)
+    if h:
+        return f"{config.static_url}/{filename}?sha={h}"
+    return f"{config.static_url}/{filename}"
 
 
 def _generate_font_tags(config: HicclConfig) -> str:
@@ -69,11 +97,11 @@ def hiccl_raw_layout(
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{config.title}</title>
   <meta name="hiccl-session" content="{session_id}">
-  <link href="/static/daisyui.css" rel="stylesheet" type="text/css" />
-  <script src="/static/tailwind.js"></script>
-  <script defer src="/static/alpine.js"></script>
-  <script src="/static/htmx.js"></script>
-  <script src="/static/hiccl.js"></script>
+  <link href="{_static_src(config, "daisyui.css")}" rel="stylesheet" type="text/css" />
+  <script src="{_static_src(config, "tailwind.js")}"></script>
+  <script defer src="{_static_src(config, "alpine.js")}"></script>
+  <script src="{_static_src(config, "htmx.js")}"></script>
+  <script src="{_static_src(config, "hiccl.js")}"></script>
   {config.head_extra}
 </head>
 <body>
@@ -113,11 +141,11 @@ def hiccl_default_layout(
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{config.title}</title>
   <meta name="hiccl-session" content="{session_id}">
-  <link href="/static/daisyui.css" rel="stylesheet" type="text/css" />
-  <script src="/static/tailwind.js"></script>
-  <script defer src="/static/alpine.js"></script>
-  <script src="/static/htmx.js"></script>
-  <script src="/static/hiccl.js"></script>
+  <link href="{_static_src(config, "daisyui.css")}" rel="stylesheet" type="text/css" />
+  <script src="{_static_src(config, "tailwind.js")}"></script>
+  <script defer src="{_static_src(config, "alpine.js")}"></script>
+  <script src="{_static_src(config, "htmx.js")}"></script>
+  <script src="{_static_src(config, "hiccl.js")}"></script>
   {fonts_html}
   {config.head_extra}
 </head>
@@ -174,11 +202,11 @@ def hiccl_card_layout(
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{config.title}</title>
   <meta name="hiccl-session" content="{session_id}">
-  <link href="/static/daisyui.css" rel="stylesheet" type="text/css" />
-  <script src="/static/tailwind.js"></script>
-  <script defer src="/static/alpine.js"></script>
-  <script src="/static/htmx.js"></script>
-  <script src="/static/hiccl.js"></script>
+  <link href="{_static_src(config, "daisyui.css")}" rel="stylesheet" type="text/css" />
+  <script src="{_static_src(config, "tailwind.js")}"></script>
+  <script defer src="{_static_src(config, "alpine.js")}"></script>
+  <script src="{_static_src(config, "htmx.js")}"></script>
+  <script src="{_static_src(config, "hiccl.js")}"></script>
   {fonts_html}
   {config.head_extra}
 </head>
@@ -237,6 +265,14 @@ class HicclConfig:
     hrepl_host: str = field(
         default_factory=lambda: os.environ.get("HREPL_HOST", "127.0.0.1")
     )
+
+    # Static asset cache busting (computed at startup)
+    static_hashes: dict[str, str] = field(default_factory=dict)
+
+    # Stream transport (multiplexed byte channels over WebSocket binary frames)
+    stream_enabled: bool = True
+    stream_max_channels: int = 16
+    stream_buffer_size: int = 64
 
 
 async def _session_eviction_loop(
@@ -349,6 +385,7 @@ def create_hiccl_app(config: HicclConfig) -> FastAPI:
             static_dirs.append(pkg_static)
 
         if static_dirs:
+            config.static_hashes = compute_static_hashes(static_dirs)
             if len(static_dirs) == 1:
                 app.mount(
                     config.static_url,

@@ -3,9 +3,11 @@
 Run this application to see Counter, TwoClocks and ChatRoom working together with a unified premium navigation bar!
 """
 
-import time
 import asyncio
+import time
 from datetime import datetime, timezone
+
+from examples.webshell.app import WebShellComponent
 from hiccl import (
     Component,
     ComponentRegistry,
@@ -15,8 +17,7 @@ from hiccl import (
     server,
     signal,
 )
-from hiccl.hiccup import button, div, form, h2, input_, span, raw
-from examples.babashka.app import BabashkaTerminal
+from hiccl.hiccup import button, div, form, h2, input_, raw, span
 
 
 # 1. Counter Component
@@ -316,7 +317,7 @@ app = create_hiccl_app(
     HicclConfig(
         component_registry=registry,
         transport_modes={"http", "ws", "sse"},
-        pages=menu(Counter, TwoClocks, ChatRoom, BabashkaTerminal),
+        pages=menu(Counter, TwoClocks, ChatRoom, WebShellComponent),
         brand_name="Hiccl Combined Demo",
         theme="night",
     )
